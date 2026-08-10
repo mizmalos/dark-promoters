@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/mock-db';
+import { suggestLinkSlug } from '@/lib/utils/tickets';
+
+export async function POST(req: NextRequest) {
+  // Handle both JSON and form submissions
+  let body: Record<string, string>;
+  const contentType = req.headers.get('content-type') ?? '';
+
+  if (contentType.includes('application/json')) {
+    body = await req.json();
+  } else {
+    const fd = await req.formData();
+    body = Object.fromEntries(fd.entries()) as Record<string, string>;
+  }
+
+  const { promoter_id, event_id, link_slug: rawSlug } = body;
+
+  if (!promoter_id) return NextResponse.json({ error: 'promoter_id is required.' }, { status: 400 });
+  if (!event_id)    return NextResponse.json({ error: 'event_id is required.' }, { status: 400 });
+
+  const promoter = db.promoters.get(promoter_id);
+  const event    = db.events.get(event_id);
+
+  if (!promoter) return NextResponse.json({ error: 'Promoter not found.' }, { status: 404 });
+  if (!event)    return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
+
+  // Auto-suggest slug if not provided
+  const link_slug = rawSlug?.trim()
+    ? rawSlug.trim().toLowerCase()
+    : suggestLinkSlug(promoter.slug, event.name);
+
+  if (!/^[a-z0-9-]+$/.test(link_slug)) {
+    return NextResponse.json({ error: 'Link slug must be lowercase letters, numbers and hyphens.' }, { status: 400 });
+  }
+
+  if (db.assignments.slugExists(link_slug)) {
+    return NextResponse.json({ error: `Slug "${link_slug}" is already in use.` }, { status: 409 });
+  }
+
+  const assignment = db.assignments.create(promoter_id, event_id, link_slug);
+
+  // Redirect back to event page for form submissions
+  if (!contentType.includes('application/json')) {
+    return NextResponse.redirect(new URL(`/admin/events/${event_id}`, req.url));
+  }
+
+  return NextResponse.json(assignment, { status: 201 });
+}
