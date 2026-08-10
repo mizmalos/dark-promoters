@@ -5,8 +5,9 @@ import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
 
 const STATES = ['NSW', 'VIC', 'QLD', 'ACT'];
 
-export default function PromoterDetailPage({ params }: { params: { id: string } }) {
-  const promoter = db.promoters.get(params.id);
+export default async function PromoterDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const promoter = db.promoters.get(id);
   if (!promoter) notFound();
 
   const assignments = db.assignments.forPromoter(promoter.id);

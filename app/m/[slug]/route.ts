@@ -4,9 +4,10 @@ import { buildEventbriteUrl, isSafeRedirectUrl } from '@/lib/utils/tickets';
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  const assignment = db.assignments.getBySlug(params.slug);
+  const { slug } = await params;
+  const assignment = db.assignments.getBySlug(slug);
 
   if (!assignment) {
     return new NextResponse(

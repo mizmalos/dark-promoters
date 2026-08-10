@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { db } from '@/lib/mock-db';
 import { countValidTickets, buildEventbriteUrl, suggestLinkSlug } from '@/lib/utils/tickets';
 
-export default function EventDetailPage({ params }: { params: { id: string } }) {
-  const event = db.events.withPromoters(params.id);
+export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const event = db.events.withPromoters(id);
   if (!event) notFound();
 
   const allPromoters = db.promoters.list().filter(p => p.is_active);
