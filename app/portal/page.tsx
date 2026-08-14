@@ -1,29 +1,28 @@
-// Promoter portal — in the MVP this uses a query param ?promoter=<slug>
-// for easy testing. In Phase 3 this will use Supabase Auth session.
-
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
 import Link from 'next/link';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
+
 interface Props {
-  searchParams: { promoter?: string };
+  searchParams: Promise<{ promoter?: string }>;
 }
 
-export default function PortalPage({ searchParams }: Props) {
-  // MVP: ?promoter=claire — in production replaced by auth session lookup
-  const slug = searchParams.promoter;
+export default async function PortalPage({ searchParams }: Props) {
+  const { promoter: slug } = await searchParams;
 
   if (!slug) {
+    const promoters = await db.promoters.list();
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl font-black tracking-widest mb-4">DARK</div>
           <p className="text-gray-500 text-sm mb-6">Promoter Portal</p>
-          <p className="text-xs text-gray-400">
-            MVP preview — add <code className="bg-gray-100 px-1 rounded">?promoter=claire</code> to the URL
+          <p className="text-xs text-gray-400 mb-4">
+            Preview — add <code className="bg-gray-100 px-1 rounded">?promoter=slug</code> to the URL
           </p>
-          <div className="mt-4 flex gap-2 justify-center">
-            {db.promoters.list().map(p => (
+          <div className="mt-4 flex gap-2 justify-center flex-wrap">
+            {promoters.map(p => (
               <Link key={p.id} href={`/portal?promoter=${p.slug}`}
                 className="text-sm px-3 py-1.5 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors">
                 {p.name}
@@ -35,7 +34,7 @@ export default function PortalPage({ searchParams }: Props) {
     );
   }
 
-  const promoter = db.promoters.getBySlug(slug);
+  const promoter = await db.promoters.getBySlug(slug);
 
   if (!promoter || !promoter.is_active) {
     return (
@@ -48,16 +47,17 @@ export default function PortalPage({ searchParams }: Props) {
     );
   }
 
-  const assignments = db.assignments.forPromoter(promoter.id)
+  const assignments = (await db.assignments.forPromoter(promoter.id))
     .filter(a => a.is_active && a.event.is_active);
 
-  const totalTickets = assignments.reduce((sum, a) => {
-    return sum + countValidTickets(db.sales.forAssignment(a.id));
-  }, 0);
+  const salesPerAssignment = await Promise.all(
+    assignments.map(a => db.sales.forAssignment(a.id))
+  );
+
+  const totalTickets = salesPerAssignment.reduce((sum, sales) => sum + countValidTickets(sales), 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-black text-white px-6 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <span className="text-xl font-black tracking-widest">DARK</span>
@@ -66,13 +66,14 @@ export default function PortalPage({ searchParams }: Props) {
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* Welcome */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Hey, {promoter.name.split(' ')[0]} 👋</h1>
-          <p className="text-gray-500 text-sm mt-1">Your promo code: <span className="font-mono font-bold text-gray-900">{promoter.promo_code}</span></p>
+          <p className="text-gray-500 text-sm mt-1">
+            Promo code: <span className="font-mono font-bold text-gray-900">{promoter.promo_code}</span>
+            <span className="ml-2 text-gray-400">· $5 AUD discount auto-applied</span>
+          </p>
         </div>
 
-        {/* Summary card */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
             <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Total Tickets Sold</p>
@@ -84,7 +85,6 @@ export default function PortalPage({ searchParams }: Props) {
           </div>
         </div>
 
-        {/* Per-event table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-900">Your Events</h2>
@@ -104,12 +104,10 @@ export default function PortalPage({ searchParams }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {assignments.map(a => {
-                  const sales   = db.sales.forAssignment(a.id);
-                  const tickets = countValidTickets(sales);
-                  const shareLink = `tickets.dark.com/m/${a.link_slug}`;
+                {assignments.map((a, i) => {
+                  const tickets = countValidTickets(salesPerAssignment[i]);
+                  const shareLink = `${BASE_URL}/m/${a.link_slug}`;
                   const ebUrl = buildEventbriteUrl(a.event.eventbrite_url, promoter.promo_code);
-
                   const eventDate = a.event.event_date
                     ? new Date(a.event.event_date).toLocaleDateString('en-AU', {
                         day: 'numeric', month: 'short', year: 'numeric',
@@ -132,12 +130,12 @@ export default function PortalPage({ searchParams }: Props) {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                          <span className="font-mono text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded truncate max-w-[180px]">
                             {shareLink}
                           </span>
                           <a href={ebUrl} target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-gray-400 hover:text-black transition-colors">
-                            Test ↗
+                            className="text-xs text-gray-400 hover:text-black transition-colors shrink-0">
+                            Buy ↗
                           </a>
                         </div>
                       </td>
@@ -150,7 +148,7 @@ export default function PortalPage({ searchParams }: Props) {
         </div>
 
         <p className="text-xs text-gray-400 text-center mt-6">
-          Share your link and your $5 discount code <strong>{promoter.promo_code}</strong> is applied automatically at checkout.
+          Share your link — the $5 discount is applied automatically at checkout.
         </p>
       </div>
     </div>
