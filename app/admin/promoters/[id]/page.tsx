@@ -2,8 +2,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/lib/db';
 import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
+import { PushEventbriteButton, CopyLinkButton } from './EventbriteActions';
 
-const STATES = ['NSW', 'VIC', 'QLD', 'ACT'];
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
 export default async function PromoterDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,10 +23,14 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
       <div className="mb-6">
         <Link href="/admin/promoters" className="text-sm text-gray-500 hover:text-black">← Promoters</Link>
         <h1 className="text-2xl font-bold text-gray-900 mt-2">{promoter.name}</h1>
-        <p className="text-sm text-gray-500">Promo code: <span className="font-mono font-semibold text-gray-800">{promoter.promo_code}</span></p>
+        <p className="text-sm text-gray-500">
+          Promo code: <span className="font-mono font-semibold text-gray-800">{promoter.promo_code}</span>
+          <span className="mx-2 text-gray-300">·</span>
+          $5 AUD discount
+        </p>
       </div>
 
-      {/* Promoter details form */}
+      {/* Promoter details */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <h2 className="font-semibold text-gray-900 mb-4">Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
@@ -43,16 +48,34 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
             <p className="text-sm text-gray-700">{promoter.notes}</p>
           </div>
         )}
-        <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
+        <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap gap-3 items-start">
           <Link href="#" className="bg-black text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
             Edit Details
           </Link>
-          <Link href={`/m/${assignments[0]?.link_slug ?? ''}`} target="_blank"
-            className="text-sm px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            Preview Link ↗
-          </Link>
+          <PushEventbriteButton promoterId={promoter.id} />
         </div>
       </div>
+
+      {/* Shareable links */}
+      {assignments.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Shareable Links</h2>
+          <p className="text-xs text-gray-400 mb-4">
+            Share these with {promoter.name}. Clicking the link auto-applies their $5 discount on Eventbrite.
+          </p>
+          <div className="space-y-3">
+            {assignments.map(a => (
+              <div key={a.id}>
+                <p className="text-xs text-gray-500 font-medium mb-1">{a.event.name}</p>
+                <CopyLinkButton
+                  url={`${BASE_URL}/m/${a.link_slug}`}
+                  label={`${BASE_URL}/m/${a.link_slug}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Per-event breakdown */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -96,7 +119,7 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
                       <td className="hidden md:table-cell px-4 py-3">
                         <a href={ebUrl} target="_blank" rel="noopener noreferrer"
                           className="text-xs text-blue-600 hover:underline">
-                          Eventbrite ↗
+                          View ↗
                         </a>
                       </td>
                       <td className="px-4 py-3">

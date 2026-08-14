@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { fetchEventAttendees } from '@/lib/eventbrite/mock';
+import { fetchEventAttendees } from '@/lib/eventbrite/api';
 import { deduplicateSales } from '@/lib/utils/tickets';
 import type { TicketStatus } from '@/lib/types';
 
