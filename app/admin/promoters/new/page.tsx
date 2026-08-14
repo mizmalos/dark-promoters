@@ -25,7 +25,6 @@ export default function NewPromoterPage() {
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
     const name = e.target.value;
     setSlug(nameToSlug(name));
-    setPromoCode(nameToPromoCode(name));
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
