@@ -7,10 +7,26 @@ import type { AustralianState } from '@/lib/types';
 
 const STATES: AustralianState[] = ['NSW', 'VIC', 'QLD', 'ACT'];
 
+function nameToSlug(name: string) {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function nameToPromoCode(name: string) {
+  return name.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '').slice(0, 12);
+}
+
 export default function NewPromoterPage() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [slug, setSlug] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const name = e.target.value;
+    setSlug(nameToSlug(name));
+    setPromoCode(nameToPromoCode(name));
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,6 +47,8 @@ export default function NewPromoterPage() {
     router.push(`/admin/promoters/${data.id}`);
   }
 
+  const inputClass = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black';
+
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
@@ -44,31 +62,55 @@ export default function NewPromoterPage() {
         )}
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Full Name *" name="name" required />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <input
+              name="name" required onChange={handleNameChange}
+              className={inputClass}
+            />
+          </div>
           <Field label="Email" name="email" type="email" />
         </div>
+
         <div className="grid grid-cols-2 gap-4">
           <Field label="Phone" name="phone" />
           <Field label="Instagram Handle" name="instagram" placeholder="@handle" />
         </div>
+
         <div className="grid grid-cols-2 gap-4">
           <Field label="City" name="city" />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-            <select name="state" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+            <select name="state" className={inputClass}>
               <option value="">Select state</option>
               {STATES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
+
+        {/* Auto-generated — shown read-only, editable if needed */}
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Slug *" name="slug" required placeholder="e.g. claire" helpText="Used in their portal URL" />
-          <Field label="Promo Code *" name="promo_code" required placeholder="e.g. CLAIRE" helpText="Eventbrite brand-wide code" />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+            <input
+              name="slug" required value={slug} onChange={e => setSlug(e.target.value)}
+              className={inputClass}
+            />
+            <p className="text-xs text-gray-400 mt-1">Auto-generated · edit if needed</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Promo Code</label>
+            <input
+              name="promo_code" required value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())}
+              className={inputClass}
+            />
+            <p className="text-xs text-gray-400 mt-1">Auto-generated · edit if needed</p>
+          </div>
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-          <textarea name="notes" rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black" />
+          <textarea name="notes" rows={3} className={inputClass} />
         </div>
 
         <div className="flex gap-3 pt-2">
@@ -86,8 +128,8 @@ export default function NewPromoterPage() {
   );
 }
 
-function Field({ label, name, type = 'text', required, placeholder, helpText }: {
-  label: string; name: string; type?: string; required?: boolean; placeholder?: string; helpText?: string;
+function Field({ label, name, type = 'text', required, placeholder }: {
+  label: string; name: string; type?: string; required?: boolean; placeholder?: string;
 }) {
   return (
     <div>
@@ -96,7 +138,6 @@ function Field({ label, name, type = 'text', required, placeholder, helpText }: 
         type={type} name={name} required={required} placeholder={placeholder}
         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
       />
-      {helpText && <p className="text-xs text-gray-400 mt-1">{helpText}</p>}
     </div>
   );
 }
