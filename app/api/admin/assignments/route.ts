@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import { suggestLinkSlug } from '@/lib/utils/tickets';
 
 export async function POST(req: NextRequest) {
@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
   if (!promoter_id) return NextResponse.json({ error: 'promoter_id is required.' }, { status: 400 });
   if (!event_id)    return NextResponse.json({ error: 'event_id is required.' }, { status: 400 });
 
-  const promoter = db.promoters.get(promoter_id);
-  const event    = db.events.get(event_id);
+  const [promoter, event] = await Promise.all([
+    db.promoters.get(promoter_id),
+    db.events.get(event_id),
+  ]);
 
   if (!promoter) return NextResponse.json({ error: 'Promoter not found.' }, { status: 404 });
   if (!event)    return NextResponse.json({ error: 'Event not found.' }, { status: 404 });
@@ -34,11 +36,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Link slug must be lowercase letters, numbers and hyphens.' }, { status: 400 });
   }
 
-  if (db.assignments.slugExists(link_slug)) {
+  if (await db.assignments.slugExists(link_slug)) {
     return NextResponse.json({ error: `Slug "${link_slug}" is already in use.` }, { status: 409 });
   }
 
-  const assignment = db.assignments.create(promoter_id, event_id, link_slug);
+  const assignment = await db.assignments.create(promoter_id, event_id, link_slug);
 
   // Redirect back to event page for form submissions
   if (!contentType.includes('application/json')) {

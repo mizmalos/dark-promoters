@@ -1,8 +1,10 @@
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 
-export default function SyncPage() {
-  const logs  = db.syncLogs.list();
-  const events = db.events.list();
+export default async function SyncPage() {
+  const [logs, events] = await Promise.all([
+    db.syncLogs.list(),
+    db.events.list(),
+  ]);
 
   return (
     <div>
@@ -20,7 +22,7 @@ export default function SyncPage() {
       </div>
 
       {/* Events sync status */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         {events.map(e => (
           <div key={e.id} className="bg-white rounded-xl border border-gray-200 p-4">
             <div className="flex items-center justify-between">
@@ -43,44 +45,48 @@ export default function SyncPage() {
         {logs.length === 0 ? (
           <p className="px-6 py-10 text-sm text-gray-400 text-center">No sync history yet.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                {['Time (AEST)', 'Event', 'Type', 'Status', 'Records', 'Error'].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {logs.map(log => {
-                const event = log.event_id ? db.events.get(log.event_id) : null;
-                const time  = new Date(log.created_at).toLocaleString('en-AU', {
-                  timeZone: 'Australia/Melbourne', day: 'numeric', month: 'short',
-                  hour: '2-digit', minute: '2-digit',
-                });
-                return (
-                  <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3 text-gray-600 text-xs font-mono">{time}</td>
-                    <td className="px-5 py-3 text-gray-700">{event?.name ?? '—'}</td>
-                    <td className="px-5 py-3">
-                      <span className="inline-block text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 capitalize">{log.sync_type}</span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        log.status === 'success' ? 'bg-green-100 text-green-700' :
-                        log.status === 'error'   ? 'bg-red-100 text-red-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-gray-600">{log.records_processed ?? '—'}</td>
-                    <td className="px-5 py-3 text-red-600 text-xs">{log.error_message ?? '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Time</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Event</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Records</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Error</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {logs.map(log => {
+                  const time  = new Date(log.created_at).toLocaleString('en-AU', {
+                    timeZone: 'Australia/Melbourne', day: 'numeric', month: 'short',
+                    hour: '2-digit', minute: '2-digit',
+                  });
+                  return (
+                    <tr key={log.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-600 text-xs font-mono whitespace-nowrap">{time}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 text-gray-700">{(events.find(e => e.id === log.event_id))?.name ?? '—'}</td>
+                      <td className="hidden sm:table-cell px-4 py-3">
+                        <span className="inline-block text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600 capitalize">{log.sync_type}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${
+                          log.status === 'success' ? 'bg-green-100 text-green-700' :
+                          log.status === 'error'   ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {log.status}
+                        </span>
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3 text-gray-600">{log.records_processed ?? '—'}</td>
+                      <td className="hidden md:table-cell px-4 py-3 text-red-600 text-xs">{log.error_message ?? '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

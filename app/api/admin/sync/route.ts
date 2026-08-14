@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import { fetchEventAttendees } from '@/lib/eventbrite/mock';
 import { deduplicateSales } from '@/lib/utils/tickets';
 import type { TicketStatus } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
-  const events = db.events.list().filter(e => e.is_active && e.eventbrite_event_id);
+  const events = (await db.events.list()).filter(e => e.is_active && e.eventbrite_event_id);
   const results = [];
 
   for (const event of events) {
     try {
       const { attendees } = await fetchEventAttendees(event.eventbrite_event_id!);
-      const assignments   = db.assignments.forEvent(event.id);
+      const assignments   = await db.assignments.forEvent(event.id);
 
       let processed = 0;
 
@@ -35,21 +35,21 @@ export async function POST(req: NextRequest) {
         );
 
         for (const sale of unique) {
-          db.sales.upsert(sale);
+          await db.sales.upsert(sale);
           processed++;
         }
 
         // Recompute cached tickets_sold (valid only)
-        const allSales = db.sales.forAssignment(assignment.id);
+        const allSales = await db.sales.forAssignment(assignment.id);
         const validCount = allSales.filter(s => s.status === 'valid').reduce((sum, s) => sum + s.quantity, 0);
-        db.assignments.update(assignment.id, { tickets_sold: validCount });
+        await db.assignments.update(assignment.id, { tickets_sold: validCount });
       }
 
-      db.syncLogs.add({ event_id: event.id, sync_type: 'manual', status: 'success', records_processed: processed, error_message: null });
+      await db.syncLogs.add({ event_id: event.id, sync_type: 'manual', status: 'success', records_processed: processed, error_message: null });
       results.push({ event: event.name, status: 'success', records: processed });
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      db.syncLogs.add({ event_id: event.id, sync_type: 'manual', status: 'error', records_processed: 0, error_message: msg });
+      await db.syncLogs.add({ event_id: event.id, sync_type: 'manual', status: 'error', records_processed: 0, error_message: msg });
       results.push({ event: event.name, status: 'error', error: msg });
     }
   }

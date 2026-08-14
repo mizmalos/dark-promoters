@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import type { AustralianState } from '@/lib/types';
 
 export async function GET() {
-  return NextResponse.json(db.events.list());
+  return NextResponse.json(await db.events.list());
 }
 
 export async function POST(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid Eventbrite URL.' }, { status: 400 });
   }
 
-  const event = db.events.create({
+  const event = await db.events.create({
     name: name.trim(),
     description: description?.trim() || null,
     venue: venue?.trim() || null,

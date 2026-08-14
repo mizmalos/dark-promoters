@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import type { AustralianState } from '@/lib/types';
 
 export async function GET() {
-  return NextResponse.json(db.promoters.list());
+  return NextResponse.json(await db.promoters.list());
 }
 
 export async function POST(req: NextRequest) {
@@ -19,15 +19,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Slug must be lowercase letters, numbers and hyphens only.' }, { status: 400 });
   }
 
-  if (db.promoters.slugExists(slug)) {
+  if (await db.promoters.slugExists(slug)) {
     return NextResponse.json({ error: `Slug "${slug}" is already in use.` }, { status: 409 });
   }
 
-  if (db.promoters.codeExists(promo_code)) {
+  if (await db.promoters.codeExists(promo_code)) {
     return NextResponse.json({ error: `Promo code "${promo_code}" is already in use.` }, { status: 409 });
   }
 
-  const promoter = db.promoters.create({
+  const promoter = await db.promoters.create({
     name: name.trim(),
     email: email?.trim() || null,
     phone: phone?.trim() || null,

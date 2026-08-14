@@ -1,9 +1,14 @@
 import Link from 'next/link';
-import { db } from '@/lib/mock-db';
-import { countValidTickets } from '@/lib/utils/tickets';
+import { db } from '@/lib/db';
 
-export default function EventsPage() {
-  const events = db.events.list();
+export default async function EventsPage() {
+  const events = await db.events.list();
+
+  // Pre-fetch assignments for all events
+  const allAssignments = await Promise.all(events.map(e => db.assignments.forEvent(e.id)));
+  const ticketsPerEvent = allAssignments.map(
+    assignments => assignments.reduce((sum, a) => sum + a.tickets_sold, 0)
+  );
 
   return (
     <div>
@@ -28,12 +33,9 @@ export default function EventsPage() {
           </div>
         )}
 
-        {events.map(event => {
-          const assignments = db.assignments.forEvent(event.id);
-          const totalTickets = assignments.reduce((sum, a) => {
-            const sales = db.sales.forAssignment(a.id);
-            return sum + countValidTickets(sales);
-          }, 0);
+        {events.map((event, i) => {
+          const assignments  = allAssignments[i];
+          const totalTickets = ticketsPerEvent[i];
 
           const eventDate = event.event_date
             ? new Date(event.event_date).toLocaleDateString('en-AU', {

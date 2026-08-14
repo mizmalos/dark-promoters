@@ -1,16 +1,21 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import { countValidTickets, buildEventbriteUrl, suggestLinkSlug } from '@/lib/utils/tickets';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const event = db.events.withPromoters(id);
+  const event = await db.events.withPromoters(id);
   if (!event) notFound();
 
-  const allPromoters = db.promoters.list().filter(p => p.is_active);
+  const allPromoters = (await db.promoters.list()).filter(p => p.is_active);
   const assignedIds  = new Set(event.promoter_events.map(pe => pe.promoter_id));
   const unassigned   = allPromoters.filter(p => !assignedIds.has(p.id));
+
+  // Pre-fetch sales for all assignments
+  const salesPerPe = await Promise.all(
+    event.promoter_events.map(pe => db.sales.forAssignment(pe.id))
+  );
 
   const eventDate = event.event_date
     ? new Date(event.event_date).toLocaleDateString('en-AU', {
@@ -19,9 +24,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       })
     : null;
 
-  const totalTickets = event.promoter_events.reduce((sum, pe) => {
-    return sum + countValidTickets(db.sales.forAssignment(pe.id));
-  }, 0);
+  const totalTickets = salesPerPe.reduce((sum, sales) => sum + countValidTickets(sales), 0);
 
   return (
     <div className="max-w-4xl">
@@ -40,7 +43,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
           { label: 'Promoters', value: event.promoter_events.length },
           { label: 'Valid Tickets', value: totalTickets },
@@ -62,52 +65,56 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         {event.promoter_events.length === 0 ? (
           <p className="px-6 py-10 text-sm text-gray-400 text-center">No promoters assigned yet.</p>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                {['Promoter', 'Code', 'Link Slug', 'Valid Tickets', 'Eventbrite Checkout', ''].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {event.promoter_events.map(pe => {
-                const sales   = db.sales.forAssignment(pe.id);
-                const tickets = countValidTickets(sales);
-                const ebUrl   = buildEventbriteUrl(event.eventbrite_url, pe.promoter.promo_code);
-                return (
-                  <tr key={pe.id} className="hover:bg-gray-50">
-                    <td className="px-5 py-3">
-                      <Link href={`/admin/promoters/${pe.promoter_id}`} className="font-medium text-gray-900 hover:underline">
-                        {pe.promoter.name}
-                      </Link>
-                      <div className="text-xs text-gray-400">{pe.promoter.city}</div>
-                    </td>
-                    <td className="px-5 py-3 font-mono text-xs font-semibold text-gray-700">{pe.promoter.promo_code}</td>
-                    <td className="px-5 py-3 font-mono text-xs text-gray-600">
-                      /m/{pe.link_slug}
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-black text-white">
-                        {tickets}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <a href={ebUrl} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline">
-                        Open ↗
-                      </a>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${pe.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {pe.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Promoter</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Code</th>
+                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Slug</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Tickets</th>
+                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Eventbrite</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {event.promoter_events.map((pe, i) => {
+                  const tickets = countValidTickets(salesPerPe[i]);
+                  const ebUrl   = buildEventbriteUrl(event.eventbrite_url, pe.promoter.promo_code);
+                  return (
+                    <tr key={pe.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <Link href={`/admin/promoters/${pe.promoter_id}`} className="font-medium text-gray-900 hover:underline whitespace-nowrap">
+                          {pe.promoter.name}
+                        </Link>
+                        <div className="text-xs text-gray-400">{pe.promoter.city}</div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs font-semibold text-gray-700 whitespace-nowrap">{pe.promoter.promo_code}</td>
+                      <td className="hidden sm:table-cell px-4 py-3 font-mono text-xs text-gray-600 whitespace-nowrap">
+                        /m/{pe.link_slug}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-black text-white">
+                          {tickets}
+                        </span>
+                      </td>
+                      <td className="hidden md:table-cell px-4 py-3">
+                        <a href={ebUrl} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:underline">
+                          Open ↗
+                        </a>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${pe.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {pe.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -115,7 +122,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       {unassigned.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Assign Promoter</h2>
-          <form action="/api/admin/assignments" method="POST" className="flex gap-3 items-end flex-wrap">
+          <form action="/api/admin/assignments" method="POST" className="flex flex-col sm:flex-row gap-3 sm:items-end flex-wrap">
             <input type="hidden" name="event_id" value={event.id} />
             <div>
               <label className="block text-xs text-gray-500 mb-1">Promoter</label>

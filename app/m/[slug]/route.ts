@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/mock-db';
+import { db } from '@/lib/db';
 import { buildEventbriteUrl, isSafeRedirectUrl } from '@/lib/utils/tickets';
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const assignment = db.assignments.getBySlug(slug);
+  const assignment = await db.assignments.getBySlug(slug);
 
   if (!assignment) {
     return new NextResponse(
