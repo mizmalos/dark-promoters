@@ -37,6 +37,11 @@ async function ebFetch(path: string, options: RequestInit = {}): Promise<Record<
   return data as Record<string, unknown>;
 }
 
+/** Public wrapper for debugging — returns raw response without throwing on error. */
+export async function ebFetchDebug(path: string): Promise<Record<string, unknown>> {
+  return ebFetch(path);
+}
+
 // ---- Organization ----
 
 /** Returns the first organization ID associated with this token. */

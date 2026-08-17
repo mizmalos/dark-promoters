@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { createEventPromoCode } from '@/lib/eventbrite/api';
+import { createEventPromoCode, ebFetchDebug } from '@/lib/eventbrite/api';
 
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  // Token sanity check — log which Eventbrite account the token belongs to
+  try {
+    const me = await ebFetchDebug('/users/me/');
+    console.log('[Eventbrite] Token is valid. Authenticated as:', JSON.stringify(me));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[Eventbrite] Token check failed:', msg);
+    return NextResponse.json({ error: `Eventbrite token invalid: ${msg}` }, { status: 401 });
+  }
 
   const promoter = await db.promoters.get(id);
   if (!promoter) return NextResponse.json({ error: 'Promoter not found.' }, { status: 404 });
