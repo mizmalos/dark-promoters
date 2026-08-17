@@ -40,7 +40,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Slug "${link_slug}" is already in use.` }, { status: 409 });
   }
 
-  const assignment = await db.assignments.create(promoter_id, event_id, link_slug);
+  let assignment;
+  try {
+    assignment = await db.assignments.create(promoter_id, event_id, link_slug);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[assignments] create failed:', msg);
+    if (!contentType.includes('application/json')) {
+      return NextResponse.redirect(
+        new URL(`/admin/events/${event_id}?error=${encodeURIComponent(msg)}`, req.url)
+      );
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
   // Redirect back to event page for form submissions
   if (!contentType.includes('application/json')) {
