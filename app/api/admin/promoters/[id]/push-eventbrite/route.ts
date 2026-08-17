@@ -38,7 +38,7 @@ export async function POST(
 
   for (const a of eligible) {
     try {
-      await createEventPromoCode(orgId, promoter.promo_code);
+      await createEventPromoCode(orgId, promoter.promo_code, a.event.eventbrite_event_id!);
       results.push({ event: a.event.name, status: 'created' });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
