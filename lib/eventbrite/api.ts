@@ -27,6 +27,7 @@ async function ebFetch(path: string, options: RequestInit = {}): Promise<Record<
 
   const data = await res.json();
   if (!res.ok) {
+    console.error('[Eventbrite] Error response:', JSON.stringify(data));
     const msg =
       (data as { error_description?: string; description?: string }).error_description ??
       (data as { error_description?: string; description?: string }).description ??
