@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { createEventPromoCode, ebFetchDebug } from '@/lib/eventbrite/api';
+import { createEventPromoCode, ebFetchDebug, getOrganizationId } from '@/lib/eventbrite/api';
 
 export async function POST(
   _req: NextRequest,
@@ -33,12 +33,12 @@ export async function POST(
     }, { status: 400 });
   }
 
+  const orgId = await getOrganizationId();
   const results: { event: string; status: string }[] = [];
 
   for (const a of eligible) {
-    const ebEventId = a.event.eventbrite_event_id!;
     try {
-      await createEventPromoCode(ebEventId, promoter.promo_code);
+      await createEventPromoCode(orgId, promoter.promo_code);
       results.push({ event: a.event.name, status: 'created' });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

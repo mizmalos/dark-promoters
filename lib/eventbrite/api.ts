@@ -56,14 +56,14 @@ export async function getOrganizationId(): Promise<string> {
 // ---- Discounts ----
 
 /**
- * Create a $5 promo code on a specific Eventbrite event.
- * Event-level discounts work on all Eventbrite plans.
+ * Create a $5 org-level promo code via the organization discounts endpoint.
+ * Applies to all events in the org (Eventbrite's only supported creation endpoint).
  */
 export async function createEventPromoCode(
-  eventbriteEventId: string,
+  orgId: string,
   code: string
 ): Promise<{ id: string; code: string }> {
-  const data = await ebFetch(`/events/${eventbriteEventId}/discounts/`, {
+  const data = await ebFetch(`/organizations/${orgId}/discounts/`, {
     method: 'POST',
     body: JSON.stringify({
       discount: {
