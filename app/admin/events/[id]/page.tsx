@@ -12,101 +12,140 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const assignedIds  = new Set(event.promoter_events.map(pe => pe.promoter_id));
   const unassigned   = allPromoters.filter(p => !assignedIds.has(p.id));
 
-  // Pre-fetch sales for all assignments
   const salesPerPe = await Promise.all(
     event.promoter_events.map(pe => db.sales.forAssignment(pe.id))
   );
 
-  const eventDate = event.event_date
+  const dateStr = event.event_date
     ? new Date(event.event_date).toLocaleDateString('en-AU', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', timeZone: 'Australia/Melbourne',
+        day: 'numeric', month: 'long', year: 'numeric',
+        timeZone: 'Australia/Melbourne',
       })
     : null;
 
   const totalTickets = salesPerPe.reduce((sum, sales) => sum + countValidTickets(sales), 0);
 
+  // Ranked list
+  const ranked = event.promoter_events
+    .map((pe, i) => ({ pe, tickets: countValidTickets(salesPerPe[i]) }))
+    .sort((a, b) => b.tickets - a.tickets);
+
   return (
-    <div className="max-w-4xl">
-      <div className="mb-6">
-        <Link href="/admin/events" className="text-sm text-gray-500 hover:text-black">← Events</Link>
-        <div className="flex items-center gap-3 mt-2">
-          <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${event.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-            {event.is_active ? 'Live on Eventbrite' : 'Inactive'}
+    <div className="space-y-6 max-w-4xl">
+      {/* ── Back ── */}
+      <Link href="/admin/events" className="label-meta inline-flex items-center gap-1.5 transition-colors hover:text-[#F2F2EE]">
+        ← Events
+      </Link>
+
+      {/* ── Header ── */}
+      <div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="page-title">{event.name}</h1>
+          <span className={event.is_active ? 'badge-active' : 'badge-inactive'}>
+            {event.is_active ? 'Active' : 'Inactive'}
           </span>
+          {event.eventbrite_url && (
+            <a
+              href={event.eventbrite_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="label-meta transition-colors hover:text-[#F2F2EE]"
+              style={{ color: '#555' }}
+            >
+              Eventbrite ↗
+            </a>
+          )}
         </div>
-        <p className="text-sm text-gray-500 mt-1">
-          {event.venue && `${event.venue} · `}{event.city}, {event.state}
-          {eventDate && ` · ${eventDate}`}
+        <p className="text-sm mt-2" style={{ color: '#555' }}>
+          {[event.venue, event.city, event.state].filter(Boolean).join(' · ')}
+          {dateStr && <span> · {dateStr}</span>}
         </p>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      {/* ── Metrics ── */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {[
-          { label: 'Promoters', value: event.promoter_events.length },
-          { label: 'Valid Tickets', value: totalTickets },
-          { label: 'Eventbrite ID', value: event.eventbrite_event_id ?? '—' },
-        ].map(s => (
-          <div key={s.label} className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{s.label}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{s.value}</p>
+          { label: 'Tickets Sold', value: totalTickets, green: true },
+          { label: 'Promoters',    value: event.promoter_events.length },
+          { label: 'Eventbrite ID', value: event.eventbrite_event_id ?? '—', mono: true },
+        ].map(m => (
+          <div key={m.label} className="dark-card p-5">
+            <p className="label-meta mb-3">{m.label}</p>
+            <p
+              className={m.green ? 'metric-value-green' : 'metric-value'}
+              style={m.mono ? { fontSize: '1rem', fontFamily: 'monospace', color: '#777' } : {}}
+            >
+              {m.value}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Assigned promoters */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Assigned Promoters</h2>
+      {/* ── Promoter performance ── */}
+      <div className="dark-card overflow-hidden">
+        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #1a1a1a' }}>
+          <p className="label-meta-2">Promoter Performance</p>
+          <span className="label-meta">{event.promoter_events.length} assigned</span>
         </div>
 
         {event.promoter_events.length === 0 ? (
-          <p className="px-6 py-10 text-sm text-gray-400 text-center">No promoters assigned yet.</p>
+          <p className="px-6 py-10 text-sm text-center" style={{ color: '#555' }}>
+            No promoters assigned yet.
+          </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+            <table className="dark-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Promoter</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Code</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Slug</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Tickets</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Eventbrite</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                  <th>#</th>
+                  <th>Promoter</th>
+                  <th>Code</th>
+                  <th className="hidden sm:table-cell">Slug</th>
+                  <th>Tickets</th>
+                  <th className="hidden md:table-cell">Eventbrite</th>
+                  <th>Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {event.promoter_events.map((pe, i) => {
-                  const tickets = countValidTickets(salesPerPe[i]);
-                  const ebUrl   = buildEventbriteUrl(event.eventbrite_url, pe.promoter.promo_code);
+              <tbody>
+                {ranked.map(({ pe, tickets }, i) => {
+                  const ebUrl = buildEventbriteUrl(event.eventbrite_url, pe.promoter.promo_code);
                   return (
-                    <tr key={pe.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <Link href={`/admin/promoters/${pe.promoter_id}`} className="font-medium text-gray-900 hover:underline whitespace-nowrap">
+                    <tr key={pe.id}>
+                      <td className="w-10">
+                        <span className="label-meta">{String(i + 1).padStart(2, '0')}</span>
+                      </td>
+                      <td>
+                        <Link
+                          href={`/admin/promoters/${pe.promoter_id}`}
+                          className="font-semibold transition-colors hover:text-[#B7FF00]"
+                          style={{ color: '#F2F2EE' }}
+                        >
                           {pe.promoter.name}
                         </Link>
-                        <div className="text-xs text-gray-400">{pe.promoter.city}</div>
+                        {pe.promoter.city && (
+                          <div className="text-xs mt-0.5" style={{ color: '#555' }}>{pe.promoter.city}</div>
+                        )}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs font-semibold text-gray-700 whitespace-nowrap">{pe.promoter.promo_code}</td>
-                      <td className="hidden sm:table-cell px-4 py-3 font-mono text-xs text-gray-600 whitespace-nowrap">
-                        /m/{pe.link_slug}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-black text-white">
-                          {tickets}
+                      <td>
+                        <span className="font-mono text-xs font-semibold" style={{ color: '#B7FF00' }}>
+                          {pe.promoter.promo_code}
                         </span>
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3">
+                      <td className="hidden sm:table-cell">
+                        <span className="font-mono text-xs" style={{ color: '#555' }}>/m/{pe.link_slug}</span>
+                      </td>
+                      <td>
+                        <span className="ticket-chip">{tickets}</span>
+                      </td>
+                      <td className="hidden md:table-cell">
                         <a href={ebUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline">
+                          className="label-meta-2 transition-colors hover:text-[#F2F2EE]">
                           Open ↗
                         </a>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${pe.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {pe.is_active ? 'Active' : 'Inactive'}
+                      <td>
+                        <span className={pe.is_active ? 'badge-active' : 'badge-inactive'}>
+                          {pe.is_active ? 'Active' : 'Off'}
                         </span>
                       </td>
                     </tr>
@@ -118,30 +157,32 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         )}
       </div>
 
-      {/* Assign new promoter */}
+      {/* ── Assign promoter ── */}
       {unassigned.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Assign Promoter</h2>
-          <form action="/api/admin/assignments" method="POST" className="flex flex-col sm:flex-row gap-3 sm:items-end flex-wrap">
+        <div className="dark-card p-6">
+          <p className="label-meta-2 mb-5">Assign Promoter</p>
+          <form action="/api/admin/assignments" method="POST"
+            className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap"
+          >
             <input type="hidden" name="event_id" value={event.id} />
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Promoter</label>
-              <select name="promoter_id" className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black">
+            <div className="w-full sm:w-auto flex-1 min-w-[180px]">
+              <label className="label-meta block mb-2">Promoter</label>
+              <select name="promoter_id" className="dark-select">
                 {unassigned.map(p => (
                   <option key={p.id} value={p.id}>{p.name} ({p.promo_code})</option>
                 ))}
               </select>
             </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Link Slug</label>
+            <div className="w-full sm:w-44">
+              <label className="label-meta block mb-2">Link Slug</label>
               <input
-                type="text" name="link_slug"
+                type="text"
+                name="link_slug"
                 placeholder={suggestLinkSlug(unassigned[0]?.slug ?? 'slug', event.name)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-black w-44"
+                className="dark-input"
               />
             </div>
-            <button type="submit"
-              className="bg-black text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+            <button type="submit" className="btn-primary">
               Assign
             </button>
           </form>

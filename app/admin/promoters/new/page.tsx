@@ -11,10 +11,6 @@ function nameToSlug(name: string) {
   return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function nameToPromoCode(name: string) {
-  return name.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '').slice(0, 12);
-}
-
 export default function NewPromoterPage() {
   const router = useRouter();
   const [error, setError] = useState('');
@@ -23,49 +19,51 @@ export default function NewPromoterPage() {
   const [promoCode, setPromoCode] = useState('');
 
   function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const name = e.target.value;
-    setSlug(nameToSlug(name));
+    setSlug(nameToSlug(e.target.value));
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     const fd = new FormData(e.currentTarget);
     const body = Object.fromEntries(fd.entries());
-
     const res = await fetch('/api/admin/promoters', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     const data = await res.json();
-
     if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setLoading(false); return; }
     router.push(`/admin/promoters/${data.id}`);
   }
 
-  const inputClass = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black';
-
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6">
-        <Link href="/admin/promoters" className="text-sm text-gray-500 hover:text-black">← Promoters</Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Add Promoter</h1>
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <Link href="/admin/promoters" className="label-meta inline-flex items-center gap-1.5 transition-colors hover:text-[#F2F2EE] mb-4 block">
+          ← Promoters
+        </Link>
+        <h1 className="page-title">Add Promoter</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="dark-card p-6 space-y-5">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">{error}</div>
+          <div className="text-sm px-4 py-3 rounded-lg" style={{ background: 'rgba(255,68,68,0.08)', border: '1px solid rgba(255,68,68,0.2)', color: '#FF4444' }}>
+            {error}
+          </div>
         )}
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+            <label className="label-meta-2 block mb-2">
+              Full Name <span style={{ color: '#B7FF00' }}>*</span>
+            </label>
             <input
-              name="name" required onChange={handleNameChange}
-              className={inputClass}
+              name="name"
+              required
+              onChange={handleNameChange}
+              className="dark-input"
             />
           </div>
           <Field label="Email" name="email" type="email" />
@@ -79,48 +77,51 @@ export default function NewPromoterPage() {
         <div className="grid grid-cols-2 gap-4">
           <Field label="City" name="city" />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-            <select name="state" className={inputClass}>
+            <label className="label-meta-2 block mb-2">State</label>
+            <select name="state" className="dark-select">
               <option value="">Select state</option>
               {STATES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Auto-generated — shown read-only, editable if needed */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+            <label className="label-meta-2 block mb-2">Slug <span style={{ color: '#B7FF00' }}>*</span></label>
             <input
-              name="slug" required value={slug} onChange={e => setSlug(e.target.value)}
-              className={inputClass}
+              name="slug"
+              required
+              value={slug}
+              onChange={e => setSlug(e.target.value)}
+              className="dark-input"
             />
-            <p className="text-xs text-gray-400 mt-1">Auto-generated · edit if needed</p>
+            <p className="label-meta mt-1.5">Auto-generated from name · edit if needed</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Promo Code</label>
+            <label className="label-meta-2 block mb-2">Promo Code <span style={{ color: '#B7FF00' }}>*</span></label>
             <input
-              name="promo_code" required value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())}
-              className={inputClass}
+              name="promo_code"
+              required
+              value={promoCode}
+              onChange={e => setPromoCode(e.target.value.toUpperCase())}
+              placeholder="e.g. MADDIE"
+              className="dark-input"
+              style={{ fontFamily: 'monospace', letterSpacing: '0.08em', textTransform: 'uppercase' }}
             />
-            <p className="text-xs text-gray-400 mt-1">Auto-generated · edit if needed</p>
+            <p className="label-meta mt-1.5">Enter a custom code · auto-creates $5 discount on Eventbrite</p>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-          <textarea name="notes" rows={3} className={inputClass} />
+          <label className="label-meta-2 block mb-2">Notes</label>
+          <textarea name="notes" rows={3} className="dark-textarea" />
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={loading}
-            className="bg-black text-white text-sm px-5 py-2 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors">
+        <div className="flex gap-3 pt-2" style={{ borderTop: '1px solid #1a1a1a' }}>
+          <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Saving…' : 'Save Promoter'}
           </button>
-          <Link href="/admin/promoters"
-            className="text-sm px-5 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-            Cancel
-          </Link>
+          <Link href="/admin/promoters" className="btn-secondary">Cancel</Link>
         </div>
       </form>
     </div>
@@ -132,11 +133,8 @@ function Field({ label, name, type = 'text', required, placeholder }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input
-        type={type} name={name} required={required} placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black"
-      />
+      <label className="label-meta-2 block mb-2">{label}{required && <span style={{ color: '#B7FF00' }}> *</span>}</label>
+      <input type={type} name={name} required={required} placeholder={placeholder} className="dark-input" />
     </div>
   );
 }

@@ -1,20 +1,9 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
 
-const STATE_COLOURS: Record<string, string> = {
-  VIC: 'bg-blue-100 text-blue-800',
-  NSW: 'bg-green-100 text-green-800',
-  QLD: 'bg-yellow-100 text-yellow-800',
-  ACT: 'bg-purple-100 text-purple-800',
-};
-
 export default async function PromotersPage() {
   const promoters = await db.promoters.list();
-
-  // Pre-fetch all assignments so we can sum tickets_sold per promoter
-  const allAssignments = (
-    await Promise.all(promoters.map(p => db.assignments.forPromoter(p.id)))
-  );
+  const allAssignments = await Promise.all(promoters.map(p => db.assignments.forPromoter(p.id)));
   const ticketsByPromoter = new Map(
     promoters.map((p, i) => [
       p.id,
@@ -23,72 +12,124 @@ export default async function PromotersPage() {
   );
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Promoters</h1>
-          <p className="text-sm text-gray-500 mt-1">{promoters.length} total</p>
+          <p className="label-meta mb-1">{promoters.length} Total</p>
+          <h1 className="page-title">Promoters</h1>
         </div>
-        <Link href="/admin/promoters/new"
-          className="bg-black text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+        <Link href="/admin/promoters/new" className="btn-primary mt-1">
           + Add Promoter
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {promoters.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <p className="text-gray-400 text-sm">No promoters yet.</p>
-            <Link href="/admin/promoters/new" className="mt-3 inline-block text-sm text-black underline">
-              Add the first one
+      {/* ── Empty state ── */}
+      {promoters.length === 0 && (
+        <div className="dark-card px-6 py-16 text-center">
+          <p className="text-sm" style={{ color: '#555' }}>No promoters yet.</p>
+          <Link href="/admin/promoters/new" className="btn-primary mt-4 mx-auto">
+            Add first promoter
+          </Link>
+        </div>
+      )}
+
+      {/* ── Mobile cards ── */}
+      <div className="md:hidden space-y-3">
+        {promoters.map(p => {
+          const tickets = ticketsByPromoter.get(p.id) ?? 0;
+          const eventCount = allAssignments[promoters.indexOf(p)]?.length ?? 0;
+          return (
+            <Link key={p.id} href={`/admin/promoters/${p.id}`} className="dark-card p-5 block transition-all hover:border-[#333]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0"
+                    style={{ background: 'rgba(183,255,0,0.07)', color: '#B7FF00', border: '1px solid rgba(183,255,0,0.15)' }}
+                  >
+                    {p.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: '#F2F2EE' }}>{p.name}</p>
+                    {p.instagram && <p className="text-xs" style={{ color: '#555' }}>{p.instagram}</p>}
+                  </div>
+                </div>
+                <span className={p.is_active ? 'badge-active' : 'badge-inactive'}>
+                  {p.is_active ? 'Active' : 'Off'}
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="font-mono text-xs font-bold" style={{ color: '#B7FF00' }}>{p.promo_code}</span>
+                  <span className="label-meta ml-1.5">CODE</span>
+                </div>
+                <div style={{ borderLeft: '1px solid #1a1a1a', paddingLeft: '1rem' }}>
+                  <span className="font-bold text-sm" style={{ color: '#F2F2EE' }}>{tickets}</span>
+                  <span className="label-meta ml-1.5">Tickets</span>
+                </div>
+                <div style={{ borderLeft: '1px solid #1a1a1a', paddingLeft: '1rem' }}>
+                  <span className="font-bold text-sm" style={{ color: '#F2F2EE' }}>{eventCount}</span>
+                  <span className="label-meta ml-1.5">Events</span>
+                </div>
+              </div>
             </Link>
-          </div>
-        ) : (
+          );
+        })}
+      </div>
+
+      {/* ── Desktop table ── */}
+      {promoters.length > 0 && (
+        <div className="dark-card overflow-hidden hidden md:block">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+            <table className="dark-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Code</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">City / State</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Instagram</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Tickets</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
-                  <th className="px-4 py-3"></th>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Location</th>
+                  <th>Instagram</th>
+                  <th>Tickets</th>
+                  <th>Events</th>
+                  <th>Status</th>
+                  <th></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {promoters.map(p => {
-                  const total = ticketsByPromoter.get(p.id) ?? 0;
+              <tbody>
+                {promoters.map((p, i) => {
+                  const tickets    = ticketsByPromoter.get(p.id) ?? 0;
+                  const eventCount = allAssignments[i]?.length ?? 0;
                   return (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900 whitespace-nowrap">{p.name}</div>
-                        <div className="text-xs text-gray-400">{p.email}</div>
+                    <tr key={p.id}>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                            style={{ background: 'rgba(183,255,0,0.07)', color: '#B7FF00' }}
+                          >
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold" style={{ color: '#F2F2EE' }}>{p.name}</div>
+                            {p.email && <div className="text-xs" style={{ color: '#555' }}>{p.email}</div>}
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-gray-700 font-semibold whitespace-nowrap">{p.promo_code}</td>
-                      <td className="hidden sm:table-cell px-4 py-3">
-                        <div className="text-gray-700">{p.city}</div>
-                        {p.state && (
-                          <span className={`inline-block mt-0.5 text-xs font-semibold px-1.5 py-0.5 rounded ${STATE_COLOURS[p.state] ?? 'bg-gray-100 text-gray-600'}`}>
-                            {p.state}
-                          </span>
-                        )}
+                      <td>
+                        <span className="font-mono text-xs font-bold" style={{ color: '#B7FF00' }}>{p.promo_code}</span>
                       </td>
-                      <td className="hidden md:table-cell px-4 py-3 text-gray-500">{p.instagram ?? '—'}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-black text-white">
-                          {total}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <td style={{ color: '#777' }}>{[p.city, p.state].filter(Boolean).join(', ') || '—'}</td>
+                      <td style={{ color: '#777' }}>{p.instagram ?? '—'}</td>
+                      <td><span className="ticket-chip">{tickets}</span></td>
+                      <td style={{ color: '#777' }}>{eventCount}</td>
+                      <td>
+                        <span className={p.is_active ? 'badge-active' : 'badge-inactive'}>
                           {p.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <Link href={`/admin/promoters/${p.id}`}
-                          className="text-sm text-gray-500 hover:text-black whitespace-nowrap">Edit →</Link>
+                      <td>
+                        <Link href={`/admin/promoters/${p.id}`} className="label-meta-2 transition-colors hover:text-[#F2F2EE]">
+                          View →
+                        </Link>
                       </td>
                     </tr>
                   );
@@ -96,8 +137,8 @@ export default async function PromotersPage() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -12,61 +12,101 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
   if (!promoter) notFound();
 
   const assignments = await db.assignments.forPromoter(promoter.id);
-
-  // Pre-fetch sales for each assignment
-  const salesPerAssignment = await Promise.all(
-    assignments.map(a => db.sales.forAssignment(a.id))
-  );
+  const salesPerAssignment = await Promise.all(assignments.map(a => db.sales.forAssignment(a.id)));
+  const totalTickets = salesPerAssignment.reduce((sum, sales) => sum + countValidTickets(sales), 0);
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
-        <Link href="/admin/promoters" className="text-sm text-gray-500 hover:text-black">← Promoters</Link>
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">{promoter.name}</h1>
-        <p className="text-sm text-gray-500">
-          Promo code: <span className="font-mono font-semibold text-gray-800">{promoter.promo_code}</span>
-          <span className="mx-2 text-gray-300">·</span>
-          $5 AUD discount
-        </p>
+    <div className="max-w-3xl space-y-6">
+      {/* ── Back ── */}
+      <Link href="/admin/promoters" className="label-meta inline-flex items-center gap-1.5 transition-colors hover:text-[#F2F2EE]">
+        ← Promoters
+      </Link>
+
+      {/* ── Header ── */}
+      <div className="flex items-start gap-4">
+        <div
+          className="w-14 h-14 rounded-full flex items-center justify-center font-black text-xl shrink-0"
+          style={{ background: 'rgba(183,255,0,0.08)', color: '#B7FF00', border: '1px solid rgba(183,255,0,0.2)' }}
+        >
+          {promoter.name.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="page-title">{promoter.name.toUpperCase()}</h1>
+            <span className={promoter.is_active ? 'badge-active' : 'badge-inactive'}>
+              {promoter.is_active ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+          {promoter.instagram && (
+            <p className="text-sm mt-1" style={{ color: '#555' }}>{promoter.instagram}</p>
+          )}
+        </div>
       </div>
 
-      {/* Promoter details */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Details</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+      {/* ── Summary metrics ── */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="dark-card p-4">
+          <p className="label-meta mb-2">Tickets Sold</p>
+          <p className="metric-value-green" style={{ fontSize: '1.75rem' }}>{totalTickets}</p>
+        </div>
+        <div className="dark-card p-4">
+          <p className="label-meta mb-2">Events</p>
+          <p className="metric-value" style={{ fontSize: '1.75rem' }}>{assignments.length}</p>
+        </div>
+        <div className="dark-card p-4">
+          <p className="label-meta mb-2">Revenue Est.</p>
+          <p className="metric-value" style={{ fontSize: '1.75rem' }}>
+            <span className="text-base mr-0.5" style={{ color: '#555' }}>$</span>
+            {(totalTickets * 5).toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Promo code card ── */}
+      <div className="dark-card p-6" style={{ border: '1px solid rgba(183,255,0,0.12)' }}>
+        <p className="label-meta mb-4">Promo Code</p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-black tracking-[0.15em] text-2xl" style={{ color: '#B7FF00' }}>
+              {promoter.promo_code}
+            </p>
+            <p className="label-meta mt-1">$5 AUD discount · auto-applied at checkout</p>
+          </div>
+          <PushEventbriteButton promoterId={promoter.id} />
+        </div>
+      </div>
+
+      {/* ── Details ── */}
+      <div className="dark-card p-6">
+        <div className="flex items-center justify-between mb-5">
+          <p className="label-meta-2">Details</p>
+          <Link href="#" className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
+        </div>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           <Info label="Email"     value={promoter.email} />
           <Info label="Phone"     value={promoter.phone} />
           <Info label="Instagram" value={promoter.instagram} />
           <Info label="City"      value={promoter.city} />
           <Info label="State"     value={promoter.state} />
           <Info label="Slug"      value={promoter.slug} mono />
-          <Info label="Status"    value={promoter.is_active ? 'Active' : 'Inactive'} />
         </div>
         {promoter.notes && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Notes</p>
-            <p className="text-sm text-gray-700">{promoter.notes}</p>
+          <div className="mt-5 pt-5" style={{ borderTop: '1px solid #1a1a1a' }}>
+            <p className="label-meta mb-2">Notes</p>
+            <p className="text-sm" style={{ color: '#777' }}>{promoter.notes}</p>
           </div>
         )}
-        <div className="mt-5 pt-4 border-t border-gray-100 flex flex-wrap gap-3 items-start">
-          <Link href="#" className="bg-black text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
-            Edit Details
-          </Link>
-          <PushEventbriteButton promoterId={promoter.id} />
-        </div>
       </div>
 
-      {/* Shareable links */}
+      {/* ── Shareable links ── */}
       {assignments.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Shareable Links</h2>
-          <p className="text-xs text-gray-400 mb-4">
-            Share these with {promoter.name}. Clicking the link auto-applies their $5 discount on Eventbrite.
-          </p>
+        <div className="dark-card p-6">
+          <p className="label-meta-2 mb-1">Shareable Links</p>
+          <p className="label-meta mb-5">Send these to {promoter.name.split(' ')[0]}. Clicking auto-applies their $5 discount.</p>
           <div className="space-y-3">
             {assignments.map(a => (
               <div key={a.id}>
-                <p className="text-xs text-gray-500 font-medium mb-1">{a.event.name}</p>
+                <p className="label-meta mb-2">{a.event.name}</p>
                 <CopyLinkButton
                   url={`${BASE_URL}/m/${a.link_slug}`}
                   label={`${BASE_URL}/m/${a.link_slug}`}
@@ -77,54 +117,54 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
         </div>
       )}
 
-      {/* Per-event breakdown */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-gray-900">Event Assignments</h2>
-          <span className="text-xs text-gray-400">{assignments.length} event{assignments.length !== 1 ? 's' : ''}</span>
+      {/* ── Event assignments ── */}
+      <div className="dark-card overflow-hidden">
+        <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #1a1a1a' }}>
+          <p className="label-meta-2">Event Assignments</p>
+          <span className="label-meta">{assignments.length} event{assignments.length !== 1 ? 's' : ''}</span>
         </div>
 
         {assignments.length === 0 ? (
-          <p className="px-6 py-10 text-sm text-gray-400 text-center">Not assigned to any events yet.</p>
+          <p className="px-6 py-10 text-sm text-center" style={{ color: '#555' }}>Not assigned to any events yet.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+            <table className="dark-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Event</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Tickets</th>
-                  <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Short Link</th>
-                  <th className="hidden md:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Eventbrite</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                  <th>Event</th>
+                  <th>Tickets</th>
+                  <th className="hidden sm:table-cell">Link</th>
+                  <th className="hidden md:table-cell">Eventbrite</th>
+                  <th>Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {assignments.map((a, i) => {
                   const tickets = countValidTickets(salesPerAssignment[i]);
                   const ebUrl   = buildEventbriteUrl(a.event.eventbrite_url, promoter.promo_code);
                   return (
-                    <tr key={a.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900 whitespace-nowrap">{a.event.name}</div>
-                        <div className="text-xs text-gray-400">{a.event.city}, {a.event.state}</div>
+                    <tr key={a.id}>
+                      <td>
+                        <div className="font-semibold" style={{ color: '#F2F2EE' }}>{a.event.name}</div>
+                        {(a.event.city || a.event.state) && (
+                          <div className="text-xs mt-0.5" style={{ color: '#555' }}>
+                            {[a.event.city, a.event.state].filter(Boolean).join(', ')}
+                          </div>
+                        )}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-black text-white">
-                          {tickets}
-                        </span>
+                      <td><span className="ticket-chip">{tickets}</span></td>
+                      <td className="hidden sm:table-cell">
+                        <span className="font-mono text-xs" style={{ color: '#555' }}>/m/{a.link_slug}</span>
                       </td>
-                      <td className="hidden sm:table-cell px-4 py-3 font-mono text-xs text-gray-600 whitespace-nowrap">
-                        /m/{a.link_slug}
-                      </td>
-                      <td className="hidden md:table-cell px-4 py-3">
+                      <td className="hidden md:table-cell">
                         <a href={ebUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:underline">
-                          View ↗
+                          className="label-meta-2 transition-colors hover:text-[#F2F2EE]">
+                          Open ↗
                         </a>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${a.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {a.is_active ? 'Active' : 'Inactive'}
+                      <td>
+                        <span className={a.is_active ? 'badge-active' : 'badge-inactive'}>
+                          {a.is_active ? 'Active' : 'Off'}
                         </span>
                       </td>
                     </tr>
@@ -142,8 +182,10 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
 function Info({ label, value, mono }: { label: string; value: string | null | undefined; mono?: boolean }) {
   return (
     <div>
-      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
-      <p className={`mt-0.5 text-gray-900 ${mono ? 'font-mono' : ''}`}>{value ?? '—'}</p>
+      <p className="label-meta mb-1">{label}</p>
+      <p className={`text-sm ${mono ? 'font-mono' : ''}`} style={{ color: value ? '#F2F2EE' : '#555' }}>
+        {value ?? '—'}
+      </p>
     </div>
   );
 }

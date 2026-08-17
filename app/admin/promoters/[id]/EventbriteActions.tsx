@@ -10,16 +10,14 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
     setState('loading');
     setMessage('');
     try {
-      const res = await fetch(`/api/admin/promoters/${promoterId}/push-eventbrite`, {
-        method: 'POST',
-      });
+      const res = await fetch(`/api/admin/promoters/${promoterId}/push-eventbrite`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
         setState('error');
         setMessage(data.error ?? 'Failed to push to Eventbrite.');
       } else {
         setState('success');
-        setMessage(data.note ?? `Code "${data.code}" is live on Eventbrite.`);
+        setMessage(data.note ?? `Code "${data.code}" is live.`);
       }
     } catch {
       setState('error');
@@ -28,16 +26,17 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-end gap-1.5">
       <button
         onClick={handlePush}
         disabled={state === 'loading'}
-        className="text-sm px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
+        className="btn-secondary"
+        style={state === 'success' ? { color: '#B7FF00', borderColor: 'rgba(183,255,0,0.3)' } : {}}
       >
         {state === 'loading' ? 'Pushing…' : state === 'success' ? '✓ On Eventbrite' : 'Push to Eventbrite'}
       </button>
       {message && (
-        <p className={`text-xs mt-1 ${state === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+        <p className="text-xs text-right" style={{ color: state === 'error' ? '#FF4444' : '#B7FF00' }}>
           {message}
         </p>
       )}
@@ -55,11 +54,15 @@ export function CopyLinkButton({ url, label }: { url: string; label: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-      <span className="text-xs font-mono text-gray-600 truncate flex-1">{label}</span>
+    <div
+      className="flex items-center gap-3 rounded-lg px-4 py-3"
+      style={{ background: '#111', border: '1px solid #1E1E1E' }}
+    >
+      <span className="font-mono text-xs flex-1 truncate" style={{ color: '#777' }}>{label}</span>
       <button
         onClick={handleCopy}
-        className="text-xs text-gray-500 hover:text-black shrink-0 transition-colors"
+        className="shrink-0 transition-colors text-xs font-semibold tracking-wide"
+        style={{ color: copied ? '#B7FF00' : '#555' }}
       >
         {copied ? '✓ Copied' : 'Copy'}
       </button>
