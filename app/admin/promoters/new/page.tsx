@@ -7,10 +7,6 @@ import type { AustralianState } from '@/lib/types';
 
 const STATES: AustralianState[] = ['NSW', 'VIC', 'QLD', 'ACT'];
 
-function nameToSlug(name: string) {
-  return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
 export default function NewPromoterPage() {
   const router = useRouter();
   const [error, setError] = useState('');
@@ -18,8 +14,10 @@ export default function NewPromoterPage() {
   const [slug, setSlug] = useState('');
   const [promoCode, setPromoCode] = useState('');
 
-  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setSlug(nameToSlug(e.target.value));
+  function handlePromoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    setPromoCode(code);
+    setSlug(code.toLowerCase());
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -62,7 +60,6 @@ export default function NewPromoterPage() {
             <input
               name="name"
               required
-              onChange={handleNameChange}
               className="dark-input"
             />
           </div>
@@ -103,8 +100,8 @@ export default function NewPromoterPage() {
               name="promo_code"
               required
               value={promoCode}
-              onChange={e => setPromoCode(e.target.value.toUpperCase())}
-              placeholder="e.g. MADDIE"
+              onChange={handlePromoChange}
+              placeholder="e.g. JOSH"
               className="dark-input"
               style={{ fontFamily: 'monospace', letterSpacing: '0.08em', textTransform: 'uppercase' }}
             />
