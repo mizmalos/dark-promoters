@@ -63,8 +63,7 @@ export async function createPromoCode(
       discount: {
         type: 'coded',
         code,
-        amount_off: '5.00', // $5.00 AUD
-        currency: 'AUD',
+        amount_off: '5.00', // $5.00 — currency inherited from event
         quantity_available: null,
       },
     }),
