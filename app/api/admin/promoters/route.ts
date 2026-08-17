@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getOrganizationId, createPromoCode } from '@/lib/eventbrite/api';
 import type { AustralianState } from '@/lib/types';
 
 export async function GET() {
@@ -41,19 +40,5 @@ export async function POST(req: NextRequest) {
     is_active: true,
   });
 
-  // Auto-create Eventbrite discount code ($5 AUD, brand-wide).
-  // If Eventbrite fails, we still return the promoter — don't block creation.
-  let eventbriteError: string | null = null;
-  try {
-    const orgId = await getOrganizationId();
-    await createPromoCode(orgId, promoter.promo_code);
-  } catch (err) {
-    eventbriteError = err instanceof Error ? err.message : 'Unknown Eventbrite error';
-    console.error('[Eventbrite] Failed to create discount code:', eventbriteError);
-  }
-
-  return NextResponse.json(
-    { ...promoter, eventbrite_warning: eventbriteError },
-    { status: 201 }
-  );
+  return NextResponse.json(promoter, { status: 201 });
 }
