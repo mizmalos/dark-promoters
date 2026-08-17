@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { countValidTickets } from '@/lib/utils/tickets';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ShareButton, CopyCodeButton } from './ShareButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
@@ -18,7 +19,7 @@ export default async function PortalPage({ searchParams }: Props) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6" style={{ background: '#070707' }}>
         <div className="text-center max-w-sm w-full">
-          <div className="font-black tracking-[0.3em] text-4xl mb-2" style={{ color: '#F2F2EE' }}>DARK</div>
+          <Image src="/dark-logo.png" alt="DARK" width={120} height={21} className="mx-auto mb-2" />
           <p className="label-meta mb-8">Promoter Portal</p>
           <p className="text-xs mb-6" style={{ color: '#555' }}>
             Preview — add <span className="font-mono" style={{ color: '#B7FF00' }}>?promoter=slug</span> to the URL
@@ -46,7 +47,7 @@ export default async function PortalPage({ searchParams }: Props) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#070707' }}>
         <div className="text-center">
-          <div className="font-black tracking-[0.3em] text-3xl mb-6" style={{ color: '#F2F2EE' }}>DARK</div>
+          <Image src="/dark-logo.png" alt="DARK" width={100} height={17} className="mx-auto mb-6" />
           <p className="text-sm" style={{ color: '#555' }}>Promoter not found or inactive.</p>
           <Link href="/portal" className="label-meta mt-4 block transition-colors hover:text-[#F2F2EE]">
             ← Back
@@ -69,7 +70,7 @@ export default async function PortalPage({ searchParams }: Props) {
         className="sticky top-0 z-10 px-5 py-4 flex items-center justify-between"
         style={{ background: 'rgba(7,7,7,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1a1a1a' }}
       >
-        <span className="font-black tracking-[0.25em] text-base" style={{ color: '#F2F2EE' }}>DARK</span>
+        <Image src="/dark-logo.png" alt="DARK" width={56} height={10} priority />
         <span className="label-meta">Promoter Portal</span>
       </header>
 

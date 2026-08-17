@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
@@ -67,10 +68,8 @@ export default function AdminNav() {
         style={{ background: '#070707', borderRight: '1px solid #1a1a1a' }}
       >
         <div className="px-5 pt-7 pb-6" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          <div className="font-black tracking-[0.25em] text-lg" style={{ color: '#F2F2EE' }}>
-            DARK
-          </div>
-          <div className="label-meta mt-0.5">Admin</div>
+          <Image src="/dark-logo.png" alt="DARK" width={80} height={14} priority style={{ display: 'block' }} />
+          <div className="label-meta mt-2">Admin</div>
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-0.5">
@@ -103,8 +102,8 @@ export default function AdminNav() {
         className="md:hidden flex items-center justify-between px-4 py-3.5 shrink-0"
         style={{ background: '#070707', borderBottom: '1px solid #1a1a1a' }}
       >
-        <div className="flex items-baseline gap-2.5">
-          <span className="font-black tracking-[0.25em] text-base" style={{ color: '#F2F2EE' }}>DARK</span>
+        <div className="flex items-center gap-3">
+          <Image src="/dark-logo.png" alt="DARK" width={56} height={10} priority />
           <span className="label-meta">Admin</span>
         </div>
       </header>
