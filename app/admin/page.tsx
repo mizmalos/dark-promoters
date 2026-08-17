@@ -32,10 +32,9 @@ export default async function AdminDashboard() {
     .slice(0, 2);
 
   const metrics = [
-    { label: 'Active Promoters',  value: activePromoters, href: '/admin/promoters' },
-    { label: 'Active Events',     value: activeEvents,    href: '/admin/events' },
-    { label: 'Assignments',       value: allAssignments.length, href: '/admin/events' },
-    { label: 'Tickets Sold',      value: totalValidTickets, href: '/admin/sync', green: true },
+    { label: 'Active Promoters', value: activePromoters,    href: '/admin/promoters' },
+    { label: 'Active Events',    value: activeEvents,       href: '/admin/events' },
+    { label: 'Tickets Sold',     value: totalValidTickets,  href: '/admin/sync', green: true },
   ];
 
   return (
