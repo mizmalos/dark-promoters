@@ -50,21 +50,20 @@ export async function getOrganizationId(): Promise<string> {
 // ---- Discounts ----
 
 /**
- * Create a brand-wide $5 AUD promo code as an organization-level discount.
- * Applies to all events in the organization automatically.
+ * Create a $5 promo code on a specific Eventbrite event.
+ * Event-level discounts work on all Eventbrite plans.
  */
-export async function createPromoCode(
-  orgId: string,
+export async function createEventPromoCode(
+  eventbriteEventId: string,
   code: string
 ): Promise<{ id: string; code: string }> {
-  const data = await ebFetch(`/organizations/${orgId}/discounts/`, {
+  const data = await ebFetch(`/events/${eventbriteEventId}/discounts/`, {
     method: 'POST',
     body: JSON.stringify({
       discount: {
         type: 'coded',
         code,
-        amount_off: '5.00', // $5.00 — currency inherited from event
-        quantity_available: null,
+        amount_off: '5.00',
       },
     }),
   });
