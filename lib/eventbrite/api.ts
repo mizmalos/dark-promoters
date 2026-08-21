@@ -6,7 +6,8 @@
 
 import type { EventbriteAttendee, EventbriteSyncResult, TicketStatus } from '@/lib/types';
 
-const BASE = 'https://www.eventbriteapi.com/v3';
+const BASE     = 'https://www.eventbriteapi.com/v3';
+const BASE_AU  = 'https://www.eventbrite.com.au/api/v3';
 
 function getToken(): string {
   const t = process.env.EVENTBRITE_TOKEN;
@@ -42,6 +43,36 @@ export async function ebFetchDebug(path: string): Promise<Record<string, unknown
   return ebFetch(path);
 }
 
+/**
+ * Fetch using the .com.au session cookie (for endpoints that reject Bearer tokens).
+ * Requires EVENTBRITE_SESSION env var — the full Cookie header value copied from DevTools.
+ */
+async function ebFetchSession(path: string, options: RequestInit = {}): Promise<Record<string, unknown>> {
+  const sessionCookie = process.env.EVENTBRITE_SESSION;
+  if (!sessionCookie) throw new Error('EVENTBRITE_SESSION is not configured. Copy the Cookie header from a logged-in Eventbrite request in DevTools and add it to Vercel env vars.');
+
+  const res = await fetch(`${BASE_AU}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: sessionCookie,
+      ...(options.headers as Record<string, string> | undefined),
+    },
+    cache: 'no-store',
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error('[Eventbrite Session] Error response:', JSON.stringify(data));
+    const msg =
+      (data as { error_description?: string; description?: string }).error_description ??
+      (data as { error_description?: string; description?: string }).description ??
+      JSON.stringify(data);
+    throw new Error(`Eventbrite ${res.status}: ${msg}`);
+  }
+  return data as Record<string, unknown>;
+}
+
 // ---- Organization ----
 
 /** Returns the first organization ID associated with this token. */
@@ -55,25 +86,41 @@ export async function getOrganizationId(): Promise<string> {
 
 // ---- Discounts ----
 
+/** Fetch all ticket class IDs for an event. */
+async function getTicketClassIds(eventId: string): Promise<string[]> {
+  const data = await ebFetch(`/events/${eventId}/ticket_classes/`);
+  const classes = data.ticket_classes as Array<{ id: string | number }> | undefined;
+  return (classes ?? []).map(tc => String(tc.id));
+}
+
 /**
  * Create a $5 org-level promo code via the organization discounts endpoint.
- * Must pass event_ids to associate the discount with specific events.
+ * Includes both event_ids and ticket_class_ids to satisfy Eventbrite's auth check.
  */
 export async function createEventPromoCode(
   orgId: string,
   code: string,
   eventId: string
 ): Promise<{ id: string; code: string }> {
-  const data = await ebFetch(`/organizations/${orgId}/discounts/`, {
+  const ticketClassIds = await getTicketClassIds(eventId);
+  console.log('[Eventbrite] Ticket class IDs for event', eventId, ':', ticketClassIds);
+
+  const body: Record<string, unknown> = {
+    type: 'coded',
+    discount_type: 'coded',
+    code,
+    amount_off: '5.00',
+    event_id: eventId,          // singular string, not array
+    ticket_class_ids: ticketClassIds.length > 0 ? ticketClassIds : null,
+    hold_ids: null,
+    quantity_available: 0,
+    start_date: null,
+    end_date: null,
+  };
+
+  const data = await ebFetchSession(`/organizations/${orgId}/discounts/`, {
     method: 'POST',
-    body: JSON.stringify({
-      discount: {
-        type: 'coded',
-        code,
-        amount_off: '5.00',
-        event_ids: [eventId],
-      },
-    }),
+    body: JSON.stringify({ discount: body }),
   });
   return { id: String(data.id), code: String(data.code) };
 }
