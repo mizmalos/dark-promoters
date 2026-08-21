@@ -45,10 +45,17 @@ export async function POST(
       // Code already exists on this event — that's fine
       if (message.toLowerCase().includes('already exists') || message.includes('409') || message.includes('duplicate')) {
         results.push({ event: a.event.name, status: 'already exists' });
+      } else if (message.includes('401') || message.toLowerCase().includes('csrf') || message.toLowerCase().includes('session')) {
+        results.push({ event: a.event.name, status: 'session_expired' });
       } else {
         results.push({ event: a.event.name, status: `error: ${message}` });
       }
     }
+  }
+
+  const sessionExpired = results.some(r => r.status === 'session_expired');
+  if (sessionExpired) {
+    return NextResponse.json({ error: 'SESSION_EXPIRED' }, { status: 401 });
   }
 
   const allFailed = results.every(r => r.status.startsWith('error'));

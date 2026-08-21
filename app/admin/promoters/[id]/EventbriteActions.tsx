@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
-  const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error' | 'session_expired'>('idle');
   const [message, setMessage] = useState('');
 
   async function handlePush() {
@@ -13,11 +13,15 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
       const res = await fetch(`/api/admin/promoters/${promoterId}/push-eventbrite`, { method: 'POST' });
       const data = await res.json();
       if (!res.ok) {
-        setState('error');
-        setMessage(data.error ?? 'Failed to push to Eventbrite.');
+        if (data.error === 'SESSION_EXPIRED') {
+          setState('session_expired');
+        } else {
+          setState('error');
+          setMessage(data.error ?? 'Failed to push to Eventbrite.');
+        }
       } else {
         setState('success');
-        setMessage(data.note ?? `Code "${data.code}" is live.`);
+        setMessage('');
       }
     } catch {
       setState('error');
@@ -26,19 +30,33 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1.5">
+    <div className="flex flex-col items-end gap-2 w-full">
       <button
         onClick={handlePush}
         disabled={state === 'loading'}
-        className="btn-secondary"
+        className="btn-secondary shrink-0"
         style={state === 'success' ? { color: '#B7FF00', borderColor: 'rgba(183,255,0,0.3)' } : {}}
       >
         {state === 'loading' ? 'Pushing…' : state === 'success' ? '✓ On Eventbrite' : 'Push to Eventbrite'}
       </button>
-      {message && (
-        <p className="text-xs text-right" style={{ color: state === 'error' ? '#FF4444' : '#B7FF00' }}>
-          {message}
-        </p>
+
+      {message && state === 'error' && (
+        <p className="text-xs text-right" style={{ color: '#FF4444' }}>{message}</p>
+      )}
+
+      {state === 'session_expired' && (
+        <div className="w-full mt-2 rounded-lg p-4 text-sm" style={{ background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)' }}>
+          <p className="font-semibold mb-2" style={{ color: '#FFB400' }}>⚠ Eventbrite session expired</p>
+          <p className="mb-3" style={{ color: '#888' }}>Your Eventbrite login session needs refreshing in Vercel. Takes 2 min:</p>
+          <ol className="space-y-1 list-decimal list-inside" style={{ color: '#777' }}>
+            <li>Open Eventbrite → any event → Promotions tab</li>
+            <li>Open DevTools (Cmd+Option+I) → Network tab</li>
+            <li>Create any promo code → find the <code style={{ color: '#aaa' }}>discounts/</code> POST request</li>
+            <li>Headers → Request Headers → right-click <code style={{ color: '#aaa' }}>Cookie</code> → Copy value</li>
+            <li>Paste into Vercel → Settings → <code style={{ color: '#aaa' }}>EVENTBRITE_SESSION</code> → Save</li>
+          </ol>
+          <p className="mt-3 text-xs" style={{ color: '#555' }}>Vercel auto-redeploys after saving. Wait ~1 min then try again.</p>
+        </div>
       )}
     </div>
   );
