@@ -51,11 +51,17 @@ async function ebFetchSession(path: string, options: RequestInit = {}): Promise<
   const sessionCookie = process.env.EVENTBRITE_SESSION;
   if (!sessionCookie) throw new Error('EVENTBRITE_SESSION is not configured. Copy the Cookie header from a logged-in Eventbrite request in DevTools and add it to Vercel env vars.');
 
+  // Extract CSRF token from the cookie string for the X-CSRFToken header
+  const csrfToken = sessionCookie.match(/csrftoken=([^;]+)/)?.[1] ?? '';
+
   const res = await fetch(`${BASE_AU}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       Cookie: sessionCookie,
+      Referer: 'https://www.eventbrite.com.au/',
+      Origin: 'https://www.eventbrite.com.au',
+      'X-CSRFToken': csrfToken,
       ...(options.headers as Record<string, string> | undefined),
     },
     cache: 'no-store',
