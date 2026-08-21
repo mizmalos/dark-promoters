@@ -100,8 +100,49 @@ async function getTicketClassIds(eventId: string): Promise<string[]> {
 }
 
 /**
+ * Search org discounts for an existing code. Returns the discount ID or null.
+ * Used to find a discount when "already exists" is returned on creation.
+ */
+async function findOrgDiscountByCode(orgId: string, code: string): Promise<string | null> {
+  try {
+    const data = await ebFetchSession(`/organizations/${orgId}/discounts/?query=${encodeURIComponent(code)}&page_size=50`);
+    const discounts = data.discounts as Array<{ id: string | number; code: string }> | undefined;
+    const match = discounts?.find(d => (d.code ?? '').toLowerCase() === code.toLowerCase());
+    return match ? String(match.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * PATCH an existing org discount to also apply to a new event.
+ * Called when createEventPromoCode fails with "already exists".
+ */
+export async function addEventToExistingDiscount(
+  orgId: string,
+  code: string,
+  eventId: string,
+): Promise<void> {
+  const discountId = await findOrgDiscountByCode(orgId, code);
+  if (!discountId) throw new Error(`Could not find discount with code "${code}" to patch.`);
+
+  const ticketClassIds = await getTicketClassIds(eventId);
+  console.log('[Eventbrite] Patching discount', discountId, 'for event', eventId);
+
+  await ebFetchSession(`/organizations/${orgId}/discounts/${discountId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      discount: {
+        event_id: eventId,
+        ticket_class_ids: ticketClassIds.length > 0 ? ticketClassIds : null,
+      },
+    }),
+  });
+}
+
+/**
  * Create a $5 org-level promo code via the organization discounts endpoint.
- * Includes both event_ids and ticket_class_ids to satisfy Eventbrite's auth check.
+ * Includes event_id and ticket_class_ids to satisfy Eventbrite's validation.
  */
 export async function createEventPromoCode(
   orgId: string,
@@ -109,7 +150,6 @@ export async function createEventPromoCode(
   eventId: string
 ): Promise<{ id: string; code: string }> {
   const ticketClassIds = await getTicketClassIds(eventId);
-  console.log('[Eventbrite] Ticket class IDs for event', eventId, ':', ticketClassIds);
 
   const body: Record<string, unknown> = {
     type: 'coded',

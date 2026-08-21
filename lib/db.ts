@@ -40,6 +40,16 @@ export const db = {
       return data;
     },
 
+    getByEmail: async (email: string): Promise<Promoter | null> => {
+      const { data, error } = await supabase
+        .from('promoters')
+        .select('*')
+        .ilike('email', email)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+
     create: async (input: Omit<Promoter, 'id' | 'created_at' | 'updated_at'>): Promise<Promoter> => {
       const { data, error } = await supabase
         .from('promoters')
