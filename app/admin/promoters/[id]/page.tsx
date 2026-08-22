@@ -80,7 +80,7 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
       <div className="dark-card p-6">
         <div className="flex items-center justify-between mb-5">
           <p className="label-meta-2">Details</p>
-          <Link href="#" className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
+          <Link href={`/admin/promoters/${promoter.id}/edit`} className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           <Info label="Email"     value={promoter.email} />
