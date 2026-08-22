@@ -99,7 +99,7 @@ export default function MagicLinkForm({ next }: { next?: string }) {
           opacity: state === 'loading' || !email.trim() ? 0.5 : 1,
         }}
       >
-        {state === 'loading' ? 'Sending…' : 'Send Sign-In Link'}
+        {state === 'loading' ? 'Sending…' : 'Email Me a Sign-In Link'}
       </button>
 
       <p className="text-center text-xs" style={{ color: '#333' }}>
