@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { countValidTickets, buildEventbriteUrl, suggestLinkSlug } from '@/lib/utils/tickets';
+import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
+import BulkAssignPanel from './BulkAssignPanel';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -157,36 +158,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
         )}
       </div>
 
-      {/* ── Assign promoter ── */}
+      {/* ── Assign promoters ── */}
       {unassigned.length > 0 && (
-        <div className="dark-card p-6">
-          <p className="label-meta-2 mb-5">Assign Promoter</p>
-          <form action="/api/admin/assignments" method="POST"
-            className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap"
-          >
-            <input type="hidden" name="event_id" value={event.id} />
-            <div className="w-full sm:w-auto flex-1 min-w-[180px]">
-              <label className="label-meta block mb-2">Promoter</label>
-              <select name="promoter_id" className="dark-select">
-                {unassigned.map(p => (
-                  <option key={p.id} value={p.id}>{p.name} ({p.promo_code})</option>
-                ))}
-              </select>
-            </div>
-            <div className="w-full sm:w-44">
-              <label className="label-meta block mb-2">Link Slug</label>
-              <input
-                type="text"
-                name="link_slug"
-                placeholder={suggestLinkSlug(unassigned[0]?.slug ?? 'slug', event.name)}
-                className="dark-input"
-              />
-            </div>
-            <button type="submit" className="btn-primary">
-              Assign
-            </button>
-          </form>
-        </div>
+        <BulkAssignPanel eventId={event.id} eventName={event.name} unassigned={unassigned} />
       )}
     </div>
   );
