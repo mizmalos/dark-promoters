@@ -14,7 +14,8 @@ export default function Home() {
       />
 
       <div className="relative z-10 text-center px-6">
-        <Image src="/dark-logo.png" alt="DARK" width={480} height={87} className="mx-auto mb-10 w-[70vw] max-w-2xl h-auto" priority />
+        <Image src="/dark-logo.png" alt="DARK" width={160} height={29} className="mx-auto mb-4" priority />
+        <p className="label-meta mb-10">Est 2022</p>
         <div className="flex gap-3 justify-center flex-wrap">
           <Link href="/admin" className="btn-primary">
             Admin Dashboard
