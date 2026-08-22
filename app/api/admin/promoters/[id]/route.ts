@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import type { AustralianState } from '@/lib/types';
 
@@ -33,6 +34,9 @@ export async function PATCH(
     notes: notes?.trim() || null,
     is_active: typeof is_active === 'boolean' ? is_active : promoter.is_active,
   });
+
+  revalidatePath('/admin/promoters');
+  revalidatePath(`/admin/promoters/${id}`);
 
   return NextResponse.json(updated);
 }

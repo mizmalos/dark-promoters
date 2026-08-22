@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { suggestLinkSlug } from '@/lib/utils/tickets';
 import { uniqueAssignmentSlug } from '@/lib/utils/assign';
@@ -61,6 +62,11 @@ export async function POST(req: NextRequest) {
         });
       }
     }));
+  }
+
+  if (created > 0) {
+    revalidatePath(`/admin/events/${event_id}`);
+    revalidatePath('/admin/promoters');
   }
 
   return NextResponse.json({ created, skipped });

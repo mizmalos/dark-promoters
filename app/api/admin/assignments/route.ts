@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { suggestLinkSlug } from '@/lib/utils/tickets';
 
@@ -53,6 +54,10 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+
+  revalidatePath(`/admin/events/${event_id}`);
+  revalidatePath(`/admin/promoters/${promoter_id}`);
+  revalidatePath('/admin/promoters');
 
   // Redirect back to event page for form submissions
   if (!contentType.includes('application/json')) {

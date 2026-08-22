@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import type { AustralianState } from '@/lib/types';
 
@@ -39,6 +40,8 @@ export async function POST(req: NextRequest) {
     promo_code: promo_code.trim().toUpperCase(),
     is_active: true,
   });
+
+  revalidatePath('/admin/promoters');
 
   return NextResponse.json(promoter, { status: 201 });
 }
