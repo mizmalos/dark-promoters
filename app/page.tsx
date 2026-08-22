@@ -16,11 +16,15 @@ export default function Home() {
       <div className="relative z-10 text-center px-6">
         <Image src="/dark-logo.png" alt="DARK" width={320} height={58} className="mx-auto mb-8" priority />
         <p className="label-meta mb-10">Est 2022</p>
-        <div className="flex gap-3 justify-center flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Link href="/admin" className="btn-primary">
             Admin Dashboard
           </Link>
-          <Link href="/portal" className="btn-secondary">
+          <Link
+            href="/portal"
+            className="btn-secondary"
+            style={{ background: '#070707', color: '#B7FF00', borderColor: '#B7FF00' }}
+          >
             Promoter Portal
           </Link>
         </div>
