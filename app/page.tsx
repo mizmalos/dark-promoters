@@ -1,18 +1,26 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="text-5xl font-black tracking-widest mb-2">DARK</div>
-        <p className="text-gray-500 text-sm mb-8">Promoter Management — MVP</p>
-        <div className="flex gap-3 justify-center">
-          <Link href="/admin"
-            className="bg-black text-white px-5 py-2.5 rounded-lg text-sm hover:bg-gray-800 transition-colors">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden" style={{ background: '#070707' }}>
+      <Image src="/hero.jpg" alt="" fill priority className="object-cover" />
+
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(7,7,7,0.85) 0%, rgba(7,7,7,0.7) 45%, rgba(7,7,7,0.6) 100%)',
+        }}
+      />
+
+      <div className="relative z-10 text-center px-6">
+        <Image src="/dark-logo.png" alt="DARK" width={160} height={29} className="mx-auto mb-4" priority />
+        <p className="label-meta mb-10">Promoter Management</p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Link href="/admin" className="btn-primary">
             Admin Dashboard
           </Link>
-          <Link href="/portal"
-            className="border border-gray-200 px-5 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition-colors bg-white">
+          <Link href="/portal" className="btn-secondary">
             Promoter Portal
           </Link>
         </div>
