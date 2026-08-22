@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
 import { db } from '@/lib/db';
+import { inviteAuthUser } from '@/lib/supabase';
 
 // Generate a URL-safe slug from a name, with collision avoidance
 async function generateUniqueSlug(name: string): Promise<string> {
@@ -25,20 +25,6 @@ async function generateUniqueCode(name: string): Promise<string> {
     code = `${first}${attempt++}`;
   }
   return code;
-}
-
-// Minimal server-side Supabase client (no cookie persistence needed for signInWithOtp)
-function makeSupabaseServer() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => [],
-        setAll: () => {},
-      },
-    },
-  );
 }
 
 export async function POST(req: NextRequest) {
@@ -84,16 +70,13 @@ export async function POST(req: NextRequest) {
     is_active: true,
   });
 
-  // Fire a magic link so they can sign in straight away
-  const origin = req.headers.get('origin') ?? process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
-  const supabase = makeSupabaseServer();
-  await supabase.auth.signInWithOtp({
-    email: normalEmail,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback`,
-      shouldCreateUser: true, // create the auth user if not yet in auth.users
-    },
-  });
+  // Provision their auth account and email them an invite link — self-serve signups
+  // are disabled project-wide, so signInWithOtp's shouldCreateUser can't do this;
+  // only the admin API can create an account regardless of that restriction.
+  const result = await inviteAuthUser(normalEmail);
+  if (!result.ok) {
+    console.error('[join] Invite failed for', normalEmail, ':', result.error);
+  }
 
   return NextResponse.json({ success: true, slug });
 }

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
 import { PushEventbriteButton, CopyLinkButton } from './EventbriteActions';
 import AssignEventsPanel from './AssignEventsPanel';
+import { InviteButton } from './InviteButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
@@ -85,9 +86,12 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
 
       {/* ── Details ── */}
       <div className="dark-card p-6">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-5 gap-3">
           <p className="label-meta-2">Details</p>
-          <Link href={`/admin/promoters/${promoter.id}/edit`} className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
+          <div className="flex items-center gap-2">
+            {promoter.email && <InviteButton promoterId={promoter.id} />}
+            <Link href={`/admin/promoters/${promoter.id}/edit`} className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">
           <Info label="Email"     value={promoter.email} />

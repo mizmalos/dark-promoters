@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
+import { inviteAuthUser } from '@/lib/supabase';
 import type { AustralianState } from '@/lib/types';
 
 export async function GET() {
@@ -43,5 +44,11 @@ export async function POST(req: NextRequest) {
 
   revalidatePath('/admin/promoters');
 
-  return NextResponse.json(promoter, { status: 201 });
+  let invite_warning: string | undefined;
+  if (promoter.email) {
+    const result = await inviteAuthUser(promoter.email);
+    if (!result.ok) invite_warning = result.error;
+  }
+
+  return NextResponse.json({ ...promoter, invite_warning }, { status: 201 });
 }
