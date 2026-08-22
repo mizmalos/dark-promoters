@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { createEventPromoCode, addEventToExistingDiscount, ebFetchDebug, getOrganizationId } from '@/lib/eventbrite/api';
+import { ensureEventPromoCode, ebFetchDebug, getOrganizationId, EventbriteApiError } from '@/lib/eventbrite/api';
 
 export async function POST(
   _req: NextRequest,
@@ -38,20 +38,15 @@ export async function POST(
 
   for (const a of eligible) {
     try {
-      await createEventPromoCode(orgId, promoter.promo_code, a.event.eventbrite_event_id!);
-      results.push({ event: a.event.name, status: 'created' });
+      const outcome = await ensureEventPromoCode(orgId, promoter.promo_code, a.event.eventbrite_event_id!);
+      results.push({ event: a.event.name, status: outcome });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      // Code already exists org-wide — try to PATCH the existing discount to also cover this event
-      if (message.toLowerCase().includes('already exists') || message.includes('409') || message.includes('duplicate')) {
-        try {
-          await addEventToExistingDiscount(orgId, promoter.promo_code, a.event.eventbrite_event_id!);
-          results.push({ event: a.event.name, status: 'patched' });
-        } catch (patchErr) {
-          const patchMsg = patchErr instanceof Error ? patchErr.message : String(patchErr);
-          results.push({ event: a.event.name, status: `patched-failed: ${patchMsg}` });
-        }
-      } else if (message.includes('401') || message.toLowerCase().includes('csrf') || message.toLowerCase().includes('session')) {
+      const isAuthFailure =
+        (err instanceof EventbriteApiError && err.status === 401) ||
+        message.toLowerCase().includes('csrf') ||
+        message.toLowerCase().includes('session');
+      if (isAuthFailure) {
         results.push({ event: a.event.name, status: 'session_expired' });
       } else {
         results.push({ event: a.event.name, status: `error: ${message}` });
@@ -64,9 +59,9 @@ export async function POST(
     return NextResponse.json({ error: 'SESSION_EXPIRED' }, { status: 401 });
   }
 
-  const allFailed = results.every(r => r.status.startsWith('error') || r.status.startsWith('patched-failed'));
+  const allFailed = results.every(r => r.status.startsWith('error'));
   if (allFailed) {
-    return NextResponse.json({ error: results[0].status.replace('error: ', '').replace('patched-failed: ', '') }, { status: 500 });
+    return NextResponse.json({ error: results[0].status.replace('error: ', '') }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, results });

@@ -2,13 +2,34 @@
 
 import { useState } from 'react';
 
+interface PushResult {
+  event: string;
+  status: string;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  created: 'Live',
+  already_active: 'Already active on this event',
+  patched: 'Added',
+};
+
+function resultLabel(status: string): string {
+  return STATUS_LABEL[status] ?? (status.startsWith('error: ') ? status.slice('error: '.length) : status);
+}
+
+function isProblemResult(status: string): boolean {
+  return status.startsWith('error');
+}
+
 export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error' | 'session_expired'>('idle');
   const [message, setMessage] = useState('');
+  const [results, setResults] = useState<PushResult[]>([]);
 
   async function handlePush() {
     setState('loading');
     setMessage('');
+    setResults([]);
     try {
       const res = await fetch(`/api/admin/promoters/${promoterId}/push-eventbrite`, { method: 'POST' });
       const data = await res.json();
@@ -22,6 +43,7 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
       } else {
         setState('success');
         setMessage('');
+        setResults(data.results ?? []);
       }
     } catch {
       setState('error');
@@ -39,6 +61,16 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
       >
         {state === 'loading' ? 'Pushing…' : state === 'success' ? '✓ On Eventbrite' : 'Push to Eventbrite'}
       </button>
+
+      {state === 'success' && results.length > 0 && (
+        <ul className="w-full text-xs text-right space-y-0.5">
+          {results.map(r => (
+            <li key={r.event} style={{ color: isProblemResult(r.status) ? '#FFB400' : '#666' }}>
+              {r.event}: {resultLabel(r.status)}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {message && state === 'error' && (
         <p className="text-xs text-right" style={{ color: '#FF4444' }}>{message}</p>

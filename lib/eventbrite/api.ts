@@ -16,6 +16,19 @@ function getToken(): string {
   return t;
 }
 
+/** Carries the HTTP status + raw Eventbrite response body, so callers can branch on structured
+ * data instead of matching against Eventbrite's English error prose. */
+export class EventbriteApiError extends Error {
+  status: number;
+  body: unknown;
+  constructor(status: number, body: unknown, message: string) {
+    super(message);
+    this.name = 'EventbriteApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
 async function ebFetch(path: string, options: RequestInit = {}): Promise<Record<string, unknown>> {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
@@ -34,7 +47,7 @@ async function ebFetch(path: string, options: RequestInit = {}): Promise<Record<
       (data as { error_description?: string; description?: string }).error_description ??
       (data as { error_description?: string; description?: string }).description ??
       JSON.stringify(data);
-    throw new Error(`Eventbrite ${res.status}: ${msg}`);
+    throw new EventbriteApiError(res.status, data, `Eventbrite ${res.status}: ${msg}`);
   }
   return data as Record<string, unknown>;
 }
@@ -88,7 +101,7 @@ async function ebFetchSession(path: string, options: RequestInit = {}): Promise<
       (data as { error_description?: string; description?: string }).error_description ??
       (data as { error_description?: string; description?: string }).description ??
       JSON.stringify(data);
-    throw new Error(`Eventbrite ${res.status}: ${msg}`);
+    throw new EventbriteApiError(res.status, data, `Eventbrite ${res.status}: ${msg}`);
   }
   return data as Record<string, unknown>;
 }
@@ -114,32 +127,42 @@ async function getTicketClassIds(eventId: string): Promise<string[]> {
 }
 
 /**
- * Search org discounts for an existing code. Returns the discount ID or null.
- * Used to find a discount when "already exists" is returned on creation.
+ * True if an Eventbrite error represents a discount code that already exists — as opposed to
+ * an auth failure, validation error, or anything else. Matches on the structured response body
+ * (not pre-flattened error text) so it isn't tied to one specific phrasing.
  */
-async function findOrgDiscountByCode(orgId: string, code: string): Promise<string | null> {
+function isDuplicateDiscountError(err: unknown): boolean {
+  if (!(err instanceof EventbriteApiError)) return false;
+  if (err.status !== 400 && err.status !== 409) return false;
+  const text = JSON.stringify(err.body).toLowerCase();
+  return ['already', 'duplicate', 'exists', 'in use', 'unique'].some(kw => text.includes(kw));
+}
+
+/**
+ * Search org discounts for an existing code, and (if found) which event it's currently
+ * scoped to. Used when creation fails because the code already exists — events created by
+ * duplicating another Eventbrite event often carry its discounts along with them, so the
+ * code can already be live on the *target* event before we ever call the API.
+ */
+async function findOrgDiscount(orgId: string, code: string): Promise<{ id: string; eventId: string | null } | null> {
   try {
     const data = await ebFetchSession(`/organizations/${orgId}/discounts/?query=${encodeURIComponent(code)}&page_size=50`);
-    const discounts = data.discounts as Array<{ id: string | number; code: string }> | undefined;
+    const discounts = data.discounts as Array<{ id: string | number; code: string; event_id?: string | number | null }> | undefined;
     const match = discounts?.find(d => (d.code ?? '').toLowerCase() === code.toLowerCase());
-    return match ? String(match.id) : null;
+    if (!match) return null;
+
+    if (match.event_id != null) return { id: String(match.id), eventId: String(match.event_id) };
+
+    // Search results don't always include event scoping — fetch the discount directly to be sure.
+    const detail = await ebFetchSession(`/organizations/${orgId}/discounts/${match.id}/`);
+    return { id: String(match.id), eventId: detail.event_id != null ? String(detail.event_id) : null };
   } catch {
     return null;
   }
 }
 
-/**
- * PATCH an existing org discount to also apply to a new event.
- * Called when createEventPromoCode fails with "already exists".
- */
-export async function addEventToExistingDiscount(
-  orgId: string,
-  code: string,
-  eventId: string,
-): Promise<void> {
-  const discountId = await findOrgDiscountByCode(orgId, code);
-  if (!discountId) throw new Error(`Could not find discount with code "${code}" to patch.`);
-
+/** PATCH an existing org discount to also apply to a new event. */
+async function addEventToExistingDiscount(orgId: string, discountId: string, eventId: string): Promise<void> {
   const ticketClassIds = await getTicketClassIds(eventId);
   console.log('[Eventbrite] Patching discount', discountId, 'for event', eventId);
 
@@ -158,11 +181,7 @@ export async function addEventToExistingDiscount(
  * Create a $5 org-level promo code via the organization discounts endpoint.
  * Includes event_id and ticket_class_ids to satisfy Eventbrite's validation.
  */
-export async function createEventPromoCode(
-  orgId: string,
-  code: string,
-  eventId: string
-): Promise<{ id: string; code: string }> {
+async function createEventPromoCode(orgId: string, code: string, eventId: string): Promise<{ id: string; code: string }> {
   const ticketClassIds = await getTicketClassIds(eventId);
 
   const body: Record<string, unknown> = {
@@ -183,6 +202,33 @@ export async function createEventPromoCode(
     body: JSON.stringify({ discount: body }),
   });
   return { id: String(data.id), code: String(data.code) };
+}
+
+export type EnsurePromoCodeStatus = 'created' | 'already_active' | 'patched';
+
+/**
+ * Make sure `code` exists as a discount on `eventId`, handling the case where it already
+ * does (e.g. the event was duplicated from one that already had this promoter's code)
+ * as an expected, non-error outcome rather than surfacing Eventbrite's "already exists" error.
+ */
+export async function ensureEventPromoCode(
+  orgId: string,
+  code: string,
+  eventId: string,
+): Promise<EnsurePromoCodeStatus> {
+  try {
+    await createEventPromoCode(orgId, code, eventId);
+    return 'created';
+  } catch (err) {
+    if (!isDuplicateDiscountError(err)) throw err;
+
+    const existing = await findOrgDiscount(orgId, code);
+    if (existing?.eventId === eventId) return 'already_active';
+
+    if (!existing) throw new Error(`Could not find discount with code "${code}" to patch.`);
+    await addEventToExistingDiscount(orgId, existing.id, eventId);
+    return 'patched';
+  }
 }
 
 // ---- Attendees ----
