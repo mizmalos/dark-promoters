@@ -52,8 +52,6 @@ body {
 .dark-input {
   display: block;
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
   color: var(--text);
   border-radius: 8px;
   padding: 11px 14px;
@@ -69,8 +67,6 @@ body {
 .dark-select {
   display: block;
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
   color: var(--text);
   border-radius: 8px;
   padding: 11px 14px;
@@ -88,8 +84,6 @@ body {
 .dark-textarea {
   display: block;
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
   color: var(--text);
   border-radius: 8px;
   padding: 11px 14px;
@@ -101,6 +95,38 @@ body {
 }
 .dark-textarea:focus        { border-color: var(--green); }
 .dark-textarea::placeholder { color: var(--text-muted); }
+
+/* ── Cursor-reactive field glow ──
+   --mx/--my/--edge-a/--mist-a are driven by CursorGlow.tsx per hovered field.
+   Layer order (front → back): mist + surface fill clipped to padding-box (fully
+   opaque, so it masks the border-box layers below wherever they overlap the
+   interior) sit on top of the edge-glow + base border fill clipped to border-box —
+   leaving the glow visible only in the 1px border ring, brightest nearest the
+   cursor since it's a radial gradient centered on the cursor's relative position.
+   At rest (all alpha vars at 0) this renders pixel-identical to a plain
+   var(--surface) fill on a var(--border-2) border — no visual change when idle. */
+.dark-input, .dark-select, .dark-textarea {
+  --mx: 50%;
+  --my: 50%;
+  --edge-a: 0;
+  --mist-a: 0;
+  border: 1px solid transparent;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(circle at var(--mx) var(--my),
+      rgba(255,255,255, var(--mist-a)) 0%,
+      rgba(255,255,255, calc(var(--mist-a) * 0.5)) 22%,
+      rgba(255,255,255, calc(var(--mist-a) * 0.18)) 42%,
+      rgba(255,255,255, 0) 62%),
+    linear-gradient(var(--surface), var(--surface)),
+    radial-gradient(circle at var(--mx) var(--my),
+      rgba(183,255,0, var(--edge-a)) 0%,
+      rgba(183,255,0, calc(var(--edge-a) * 0.45)) 24%,
+      rgba(183,255,0, 0) 46%),
+    linear-gradient(var(--border-2), var(--border-2));
+  background-origin: padding-box, padding-box, border-box, border-box;
+  background-clip:   padding-box, padding-box, border-box, border-box;
+}
 
 /* ── Buttons ── */
 .btn-primary {

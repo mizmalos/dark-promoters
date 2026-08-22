@@ -3,17 +3,6 @@
 import Image from 'next/image';
 import { useState } from 'react';
 
-const INPUT_STYLE: React.CSSProperties = {
-  width: '100%',
-  background: '#111',
-  border: '1px solid #1E1E1E',
-  borderRadius: '0.5rem',
-  padding: '0.75rem 1rem',
-  fontSize: '0.875rem',
-  color: '#F2F2EE',
-  outline: 'none',
-};
-
 type AUState = 'NSW' | 'VIC' | 'QLD' | 'ACT' | '';
 
 export default function JoinPage() {
@@ -26,13 +15,6 @@ export default function JoinPage() {
   function field(key: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm(prev => ({ ...prev, [key]: e.target.value }));
-  }
-
-  function focusBorder(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
-    e.target.style.borderColor = 'rgba(183,255,0,0.3)';
-  }
-  function blurBorder(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
-    e.target.style.borderColor = '#1E1E1E';
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -100,8 +82,7 @@ export default function JoinPage() {
               type="text" required autoFocus
               placeholder="Josh Davies"
               value={form.name} onChange={field('name')}
-              style={INPUT_STYLE}
-              onFocus={focusBorder} onBlur={blurBorder}
+              className="dark-input"
             />
           </div>
 
@@ -114,8 +95,7 @@ export default function JoinPage() {
               type="email" required
               placeholder="josh@example.com"
               value={form.email} onChange={field('email')}
-              style={INPUT_STYLE}
-              onFocus={focusBorder} onBlur={blurBorder}
+              className="dark-input"
             />
           </div>
 
@@ -128,8 +108,7 @@ export default function JoinPage() {
               type="tel"
               placeholder="04XX XXX XXX"
               value={form.phone} onChange={field('phone')}
-              style={INPUT_STYLE}
-              onFocus={focusBorder} onBlur={blurBorder}
+              className="dark-input"
             />
           </div>
 
@@ -142,8 +121,7 @@ export default function JoinPage() {
               type="text"
               placeholder="@joshd"
               value={form.instagram} onChange={field('instagram')}
-              style={INPUT_STYLE}
-              onFocus={focusBorder} onBlur={blurBorder}
+              className="dark-input"
             />
           </div>
 
@@ -157,8 +135,7 @@ export default function JoinPage() {
                 type="text"
                 placeholder="Melbourne"
                 value={form.city} onChange={field('city')}
-                style={INPUT_STYLE}
-                onFocus={focusBorder} onBlur={blurBorder}
+                className="dark-input"
               />
             </div>
             <div>
@@ -167,8 +144,7 @@ export default function JoinPage() {
               </label>
               <select
                 value={form.state} onChange={field('state')}
-                style={{ ...INPUT_STYLE, appearance: 'none' }}
-                onFocus={focusBorder} onBlur={blurBorder}
+                className="dark-select"
               >
                 <option value="">Select…</option>
                 <option value="VIC">VIC</option>

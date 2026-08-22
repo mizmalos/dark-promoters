@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import CursorGlow from './CursorGlow';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`h-full ${inter.variable}`}>
       <body className="min-h-full antialiased" style={{ background: '#070707', color: '#F2F2EE' }}>
         {children}
+        <CursorGlow />
       </body>
     </html>
   );

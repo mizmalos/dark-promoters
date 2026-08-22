@@ -81,14 +81,7 @@ export default function MagicLinkForm({ next }: { next?: string }) {
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-lg px-4 py-3 text-sm outline-none transition-colors"
-          style={{
-            background: '#111',
-            border: '1px solid #1E1E1E',
-            color: '#F2F2EE',
-          }}
-          onFocus={e => (e.target.style.borderColor = 'rgba(183,255,0,0.3)')}
-          onBlur={e => (e.target.style.borderColor = '#1E1E1E')}
+          className="dark-input"
         />
       </div>
 
