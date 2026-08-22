@@ -19,9 +19,14 @@ export default async function PromotersPage() {
           <p className="label-meta mb-1">{promoters.length} Total</p>
           <h1 className="page-title">Promoters</h1>
         </div>
-        <Link href="/admin/promoters/new" className="btn-primary mt-1">
-          + Add Promoter
-        </Link>
+        <div className="flex items-center gap-2 mt-1">
+          <Link href="/admin/promoters/import" className="btn-secondary">
+            Import CSV
+          </Link>
+          <Link href="/admin/promoters/new" className="btn-primary">
+            + Add Promoter
+          </Link>
+        </div>
       </div>
 
       {/* ── Empty state ── */}

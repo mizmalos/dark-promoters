@@ -1,31 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ensureAuthUser } from '@/lib/supabase';
-
-// Generate a URL-safe slug from a name, with collision avoidance
-async function generateUniqueSlug(name: string): Promise<string> {
-  const base = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-  let slug = base;
-  let attempt = 1;
-  while (await db.promoters.slugExists(slug)) {
-    slug = `${base}-${attempt++}`;
-  }
-  return slug;
-}
-
-// Generate a promo code from first name, with collision avoidance
-async function generateUniqueCode(name: string): Promise<string> {
-  const first = name.split(/\s+/)[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
-  let code = first;
-  let attempt = 1;
-  while (await db.promoters.codeExists(code)) {
-    code = `${first}${attempt++}`;
-  }
-  return code;
-}
+import { generateUniquePromoterSlug, generateUniquePromoterCode } from '@/lib/utils/promoter-codes';
 
 export async function POST(req: NextRequest) {
   const body = await req.json() as {
@@ -54,8 +30,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const slug = await generateUniqueSlug(name.trim());
-  const promo_code = await generateUniqueCode(name.trim());
+  const slug = await generateUniquePromoterSlug(name.trim());
+  const promo_code = await generateUniquePromoterCode(name.trim());
 
   await db.promoters.create({
     name: name.trim(),
