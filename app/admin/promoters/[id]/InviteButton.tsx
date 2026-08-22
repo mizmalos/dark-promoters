@@ -6,7 +6,7 @@ export function InviteButton({ promoterId }: { promoterId: string }) {
   const [state, setState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
-  async function handleInvite() {
+  async function handleEnable() {
     setState('loading');
     setMessage('');
     try {
@@ -14,7 +14,7 @@ export function InviteButton({ promoterId }: { promoterId: string }) {
       const data = await res.json();
       if (!res.ok) {
         setState('error');
-        setMessage(data.error ?? 'Failed to send invite.');
+        setMessage(data.error ?? 'Failed to enable portal access.');
       } else {
         setState('success');
       }
@@ -27,12 +27,12 @@ export function InviteButton({ promoterId }: { promoterId: string }) {
   return (
     <div className="flex flex-col items-end gap-2">
       <button
-        onClick={handleInvite}
+        onClick={handleEnable}
         disabled={state === 'loading'}
         className="btn-secondary shrink-0"
         style={state === 'success' ? { color: '#B7FF00', borderColor: 'rgba(183,255,0,0.3)' } : {}}
       >
-        {state === 'loading' ? 'Sending…' : state === 'success' ? '✓ Invite Sent' : 'Send Portal Invite'}
+        {state === 'loading' ? 'Enabling…' : state === 'success' ? '✓ Portal Access Enabled' : 'Enable Portal Access'}
       </button>
       {message && state === 'error' && (
         <p className="text-xs text-right" style={{ color: '#FF4444' }}>{message}</p>

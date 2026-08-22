@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { inviteAuthUser } from '@/lib/supabase';
+import { ensureAuthUser } from '@/lib/supabase';
 
 export async function POST(
   _req: NextRequest,
@@ -11,7 +11,7 @@ export async function POST(
   if (!promoter) return NextResponse.json({ error: 'Promoter not found.' }, { status: 404 });
   if (!promoter.email) return NextResponse.json({ error: 'This promoter has no email on file.' }, { status: 400 });
 
-  const result = await inviteAuthUser(promoter.email);
+  const result = await ensureAuthUser(promoter.email);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 });
 
   return NextResponse.json({ success: true });

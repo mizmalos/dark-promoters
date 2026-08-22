@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { inviteAuthUser } from '@/lib/supabase';
+import { ensureAuthUser } from '@/lib/supabase';
 
 // Generate a URL-safe slug from a name, with collision avoidance
 async function generateUniqueSlug(name: string): Promise<string> {
@@ -70,12 +70,14 @@ export async function POST(req: NextRequest) {
     is_active: true,
   });
 
-  // Provision their auth account and email them an invite link — self-serve signups
-  // are disabled project-wide, so signInWithOtp's shouldCreateUser can't do this;
-  // only the admin API can create an account regardless of that restriction.
-  const result = await inviteAuthUser(normalEmail);
+  // Silently provision their auth account — self-serve signups are disabled
+  // project-wide, so signInWithOtp's shouldCreateUser can't do this; only the
+  // admin API can create an account regardless of that restriction. No email
+  // goes out here — their first email is the normal magic-link one, whenever
+  // they actually request to sign in.
+  const result = await ensureAuthUser(normalEmail);
   if (!result.ok) {
-    console.error('[join] Invite failed for', normalEmail, ':', result.error);
+    console.error('[join] Account provisioning failed for', normalEmail, ':', result.error);
   }
 
   return NextResponse.json({ success: true, slug });
