@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
 import { PushEventbriteButton, CopyLinkButton } from './EventbriteActions';
+import AssignEventsPanel from './AssignEventsPanel';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
@@ -11,9 +12,15 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
   const promoter = await db.promoters.get(id);
   if (!promoter) notFound();
 
-  const assignments = await db.assignments.forPromoter(promoter.id);
+  const [assignments, allEvents] = await Promise.all([
+    db.assignments.forPromoter(promoter.id),
+    db.events.list(),
+  ]);
   const salesPerAssignment = await Promise.all(assignments.map(a => db.sales.forAssignment(a.id)));
   const totalTickets = salesPerAssignment.reduce((sum, sales) => sum + countValidTickets(sales), 0);
+
+  const assignedEventIds = new Set(assignments.map(a => a.event_id));
+  const unassignedEvents = allEvents.filter(e => e.is_active && !assignedEventIds.has(e.id));
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -175,6 +182,11 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
           </div>
         )}
       </div>
+
+      {/* ── Assign to more events ── */}
+      {unassignedEvents.length > 0 && (
+        <AssignEventsPanel promoterId={promoter.id} unassignedEvents={unassignedEvents} />
+      )}
     </div>
   );
 }
