@@ -40,6 +40,12 @@ export default async function PortalDashboardPage() {
     );
   }
 
+  // First-ever dashboard view — show the welcome block once, then never again.
+  const isFirstVisit = !promoter.welcomed_at;
+  if (isFirstVisit) {
+    await db.promoters.update(promoter.id, { welcomed_at: new Date().toISOString() });
+  }
+
   const assignments = (await db.assignments.forPromoter(promoter.id))
     .filter(a => a.is_active && a.event.is_active);
 
@@ -72,12 +78,44 @@ export default async function PortalDashboardPage() {
 
       <div className="max-w-lg mx-auto px-5 py-8 space-y-6">
         {/* ── Welcome ── */}
-        <div>
-          <p className="label-meta mb-0.5">Welcome back,</p>
-          <h1 className="font-black text-3xl tracking-[0.05em]" style={{ color: '#F2F2EE' }}>
-            {promoter.name.split(' ')[0].toUpperCase()}.
-          </h1>
-        </div>
+        {isFirstVisit ? (
+          <div className="dark-card p-6 space-y-5" style={{ border: '1px solid rgba(183,255,0,0.12)' }}>
+            <div>
+              <p className="label-meta mb-0.5">Welcome,</p>
+              <h1 className="font-black text-3xl tracking-[0.05em]" style={{ color: '#F2F2EE' }}>
+                {promoter.name.split(' ')[0]}
+              </h1>
+              <p className="text-sm mt-2" style={{ color: '#555' }}>
+                You&apos;re in. Jump into the DARK community while you&apos;re here:
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href="https://www.instagram.com/channel/AbYUbU04iILV7rdp/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary justify-center flex-1"
+              >
+                Join Broadcast Channel
+              </a>
+              <a
+                href="https://ig.me/j/AbaD5H8-Mpok1dOy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary justify-center flex-1"
+              >
+                Join Promoter Group Chat
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="label-meta mb-0.5">Welcome back,</p>
+            <h1 className="font-black text-3xl tracking-[0.05em]" style={{ color: '#F2F2EE' }}>
+              {promoter.name.split(' ')[0].toUpperCase()}.
+            </h1>
+          </div>
+        )}
 
         {/* ── Performance ── */}
         <div className="dark-card p-6">

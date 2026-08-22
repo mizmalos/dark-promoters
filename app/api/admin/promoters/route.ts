@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   const promoter = await db.promoters.create({
     name: name.trim(),
-    email: email?.trim() || null,
+    email: email?.trim() ? email.trim().toLowerCase() : null,
     phone: phone?.trim() || null,
     instagram: instagram?.trim() || null,
     city: city?.trim() || null,
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     slug: slug.trim().toLowerCase(),
     promo_code: promo_code.trim().toUpperCase(),
     is_active: true,
+    source: 'admin',
   });
 
   revalidatePath('/admin/promoters');

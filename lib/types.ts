@@ -12,6 +12,8 @@ export type SyncType = 'manual' | 'scheduled';
 
 export type SyncStatus = 'success' | 'error' | 'partial';
 
+export type PromoterSource = 'admin' | 'self_serve';
+
 // ---- Database row types ----
 
 export interface Promoter {
@@ -26,6 +28,8 @@ export interface Promoter {
   slug: string;
   promo_code: string;
   is_active: boolean;
+  source: PromoterSource;
+  welcomed_at: string | null;
   created_at: string;
   updated_at: string;
 }

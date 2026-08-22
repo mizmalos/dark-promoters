@@ -50,7 +50,10 @@ export default async function PromotersPage() {
                     {p.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-sm" style={{ color: '#F2F2EE' }}>{p.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm" style={{ color: '#F2F2EE' }}>{p.name}</p>
+                      {p.source === 'self_serve' && <SourceBadge />}
+                    </div>
                     {p.instagram && <p className="text-xs" style={{ color: '#555' }}>{p.instagram}</p>}
                   </div>
                 </div>
@@ -109,7 +112,10 @@ export default async function PromotersPage() {
                             {p.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-semibold" style={{ color: '#F2F2EE' }}>{p.name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold" style={{ color: '#F2F2EE' }}>{p.name}</span>
+                              {p.source === 'self_serve' && <SourceBadge />}
+                            </div>
                             {p.email && <div className="text-xs" style={{ color: '#555' }}>{p.email}</div>}
                           </div>
                         </div>
@@ -140,5 +146,16 @@ export default async function PromotersPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function SourceBadge() {
+  return (
+    <span
+      className="label-meta shrink-0"
+      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2A2A', padding: '2px 6px', borderRadius: '4px' }}
+    >
+      Self-serve
+    </span>
   );
 }

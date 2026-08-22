@@ -44,13 +44,13 @@ export const db = {
       const { data, error } = await supabase
         .from('promoters')
         .select('*')
-        .ilike('email', email)
+        .eq('email', email.toLowerCase())
         .maybeSingle();
       if (error) throw error;
       return data;
     },
 
-    create: async (input: Omit<Promoter, 'id' | 'created_at' | 'updated_at'>): Promise<Promoter> => {
+    create: async (input: Omit<Promoter, 'id' | 'created_at' | 'updated_at' | 'welcomed_at'>): Promise<Promoter> => {
       const { data, error } = await supabase
         .from('promoters')
         .insert(input)

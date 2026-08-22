@@ -20,6 +20,7 @@ const PROMOTERS: Promoter[] = [
     instagram: null, city: null, state: null,
     notes: null,
     slug: 'billy', promo_code: 'BILLY', is_active: true,
+    source: 'admin', welcomed_at: null,
     created_at: '2026-06-01T00:00:00+10:00', updated_at: '2026-06-01T00:00:00+10:00',
   },
 ];

@@ -55,7 +55,7 @@ body {
   color: var(--text);
   border-radius: 8px;
   padding: 11px 14px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
@@ -70,7 +70,7 @@ body {
   color: var(--text);
   border-radius: 8px;
   padding: 11px 14px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-family: inherit;
   outline: none;
   appearance: none;
@@ -87,7 +87,7 @@ body {
   color: var(--text);
   border-radius: 8px;
   padding: 11px 14px;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-family: inherit;
   outline: none;
   resize: vertical;

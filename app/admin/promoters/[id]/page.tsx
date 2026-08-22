@@ -44,6 +44,14 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
             <span className={promoter.is_active ? 'badge-active' : 'badge-inactive'}>
               {promoter.is_active ? 'Active' : 'Inactive'}
             </span>
+            {promoter.source === 'self_serve' && (
+              <span
+                className="label-meta"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid #2A2A2A', padding: '3px 8px', borderRadius: '4px' }}
+              >
+                Signed up via public link
+              </span>
+            )}
           </div>
           {promoter.instagram && (
             <p className="text-sm mt-1" style={{ color: '#555' }}>{promoter.instagram}</p>

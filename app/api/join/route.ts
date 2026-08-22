@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
     slug,
     promo_code,
     is_active: true,
+    source: 'self_serve',
   });
 
   // Silently provision their auth account — self-serve signups are disabled
