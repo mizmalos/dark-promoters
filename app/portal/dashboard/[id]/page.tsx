@@ -18,8 +18,14 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.ver
 export default async function PortalEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
+  // Validate session server-side. If the check itself throws (stale cookie,
+  // transient Supabase error), treat it as unauthenticated rather than
+  // erroring the whole page.
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    user = (await supabase.auth.getUser()).data.user;
+  } catch {}
   if (!user) redirect('/portal');
 
   const promoter = user.email ? await db.promoters.getByEmail(user.email) : null;

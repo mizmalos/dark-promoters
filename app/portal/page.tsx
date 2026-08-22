@@ -8,9 +8,15 @@ interface Props {
 }
 
 export default async function PortalLoginPage({ searchParams }: Props) {
-  // Already signed in? Go straight to dashboard
+  // Already signed in? Go straight to dashboard. This is just a convenience
+  // redirect, not a security boundary — if the auth check itself fails (e.g. a
+  // stale/invalid session cookie, or a transient Supabase hiccup), fall through
+  // to the login form instead of erroring the whole page render.
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    user = (await supabase.auth.getUser()).data.user;
+  } catch {}
   if (user) redirect('/portal/dashboard');
 
   const { error, next } = await searchParams;

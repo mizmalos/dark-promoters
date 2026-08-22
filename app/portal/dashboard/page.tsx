@@ -8,9 +8,15 @@ import { CopyCodeButton } from '../ShareButton';
 import SignOutButton from './SignOutButton';
 
 export default async function PortalDashboardPage() {
-  // Validate session server-side
+  // Validate session server-side. middleware.ts already gates this route, but
+  // check again defensively — and if the check itself throws (stale cookie,
+  // transient Supabase error), treat it as unauthenticated rather than
+  // erroring the whole page.
   const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    user = (await supabase.auth.getUser()).data.user;
+  } catch {}
   if (!user) redirect('/portal');
 
   // Look up promoter by auth email

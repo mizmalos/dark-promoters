@@ -24,8 +24,14 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // Refresh session — must call getUser() (not getSession()) to validate against the server
-  const { data: { user } } = await supabase.auth.getUser();
+  // Refresh session — must call getUser() (not getSession()) to validate against the server.
+  // The pages under /portal/dashboard independently re-check auth themselves, so if this
+  // check throws (stale cookie, transient Supabase error) it's safe to fail open here —
+  // treat it as unauthenticated rather than 500ing every request to a protected route.
+  let user = null;
+  try {
+    user = (await supabase.auth.getUser()).data.user;
+  } catch {}
 
   // Protect /portal/dashboard — unauthenticated users go to the login page
   if (!user && request.nextUrl.pathname.startsWith('/portal/dashboard')) {
