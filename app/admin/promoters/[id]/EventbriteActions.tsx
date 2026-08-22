@@ -47,15 +47,15 @@ export function PushEventbriteButton({ promoterId }: { promoterId: string }) {
       {state === 'session_expired' && (
         <div className="w-full mt-2 rounded-lg p-4 text-sm" style={{ background: 'rgba(255,180,0,0.06)', border: '1px solid rgba(255,180,0,0.2)' }}>
           <p className="font-semibold mb-2" style={{ color: '#FFB400' }}>⚠ Eventbrite session expired</p>
-          <p className="mb-3" style={{ color: '#888' }}>Your Eventbrite login session needs refreshing in Vercel. Takes 2 min:</p>
+          <p className="mb-3" style={{ color: '#888' }}>Refresh it locally — no redeploy needed:</p>
           <ol className="space-y-1 list-decimal list-inside" style={{ color: '#777' }}>
             <li>Open Eventbrite → any event → Promotions tab</li>
             <li>Open DevTools (Cmd+Option+I) → Network tab</li>
             <li>Create any promo code → find the <code style={{ color: '#aaa' }}>discounts/</code> POST request</li>
             <li>Headers → Request Headers → right-click <code style={{ color: '#aaa' }}>Cookie</code> → Copy value</li>
-            <li>Paste into Vercel → Settings → <code style={{ color: '#aaa' }}>EVENTBRITE_SESSION</code> → Save</li>
+            <li>Run <code style={{ color: '#aaa' }}>node scripts/refresh-eventbrite-session.mjs</code> locally and paste it in</li>
           </ol>
-          <p className="mt-3 text-xs" style={{ color: '#555' }}>Vercel auto-redeploys after saving. Wait ~1 min then try again.</p>
+          <p className="mt-3 text-xs" style={{ color: '#555' }}>Takes effect immediately — try again as soon as the script confirms.</p>
         </div>
       )}
     </div>

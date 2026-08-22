@@ -5,6 +5,7 @@
 // ============================================================
 
 import type { EventbriteAttendee, EventbriteSyncResult, TicketStatus } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
 
 const BASE     = 'https://www.eventbriteapi.com/v3';
 const BASE_AU  = 'https://www.eventbrite.com.au/api/v3';
@@ -44,12 +45,25 @@ export async function ebFetchDebug(path: string): Promise<Record<string, unknown
 }
 
 /**
+ * Reads the live Eventbrite session cookie — the `eventbrite_session` table is the source
+ * of truth (kept fresh via scripts/refresh-eventbrite-session.mjs), falling back to the
+ * EVENTBRITE_SESSION env var if the table is empty.
+ */
+async function getSessionCookie(): Promise<string | null> {
+  const { data } = await supabase
+    .from('eventbrite_session')
+    .select('cookie')
+    .eq('id', 1)
+    .maybeSingle();
+  return data?.cookie ?? process.env.EVENTBRITE_SESSION ?? null;
+}
+
+/**
  * Fetch using the .com.au session cookie (for endpoints that reject Bearer tokens).
- * Requires EVENTBRITE_SESSION env var — the full Cookie header value copied from DevTools.
  */
 async function ebFetchSession(path: string, options: RequestInit = {}): Promise<Record<string, unknown>> {
-  const sessionCookie = process.env.EVENTBRITE_SESSION;
-  if (!sessionCookie) throw new Error('EVENTBRITE_SESSION is not configured. Copy the Cookie header from a logged-in Eventbrite request in DevTools and add it to Vercel env vars.');
+  const sessionCookie = await getSessionCookie();
+  if (!sessionCookie) throw new Error('No Eventbrite session cookie configured. Run scripts/refresh-eventbrite-session.mjs with a fresh Cookie header from DevTools.');
 
   // Extract CSRF token from the cookie string for the X-CSRFToken header
   const csrfToken = sessionCookie.match(/csrftoken=([^;]+)/)?.[1] ?? '';
