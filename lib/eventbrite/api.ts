@@ -139,23 +139,32 @@ function isDuplicateDiscountError(err: unknown): boolean {
 }
 
 /**
- * Search org discounts for an existing code, and (if found) which event it's currently
- * scoped to. Used when creation fails because the code already exists — events created by
- * duplicating another Eventbrite event often carry its discounts along with them, so the
- * code can already be live on the *target* event before we ever call the API.
+ * Check whether `eventId` itself already has a discount with this code — the org-level
+ * discounts list does NOT include discounts created directly on an event (e.g. via its
+ * Promotions tab, or carried over when the event was duplicated from another one), so this
+ * has to be checked separately rather than inferred from the org-wide search below.
  */
-async function findOrgDiscount(orgId: string, code: string): Promise<{ id: string; eventId: string | null } | null> {
+async function findEventDiscountByCode(eventId: string, code: string): Promise<string | null> {
+  try {
+    const data = await ebFetchSession(`/events/${eventId}/discounts/?page_size=100`);
+    const discounts = data.discounts as Array<{ id: string | number; code?: string }> | undefined;
+    const match = discounts?.find(d => (d.code ?? '').toLowerCase() === code.toLowerCase());
+    return match ? String(match.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Search org-level discounts for an existing code. Used as a fallback when the code doesn't
+ * already exist directly on the target event, to find the discount to PATCH onto it.
+ */
+async function findOrgDiscount(orgId: string, code: string): Promise<string | null> {
   try {
     const data = await ebFetchSession(`/organizations/${orgId}/discounts/?query=${encodeURIComponent(code)}&page_size=50`);
-    const discounts = data.discounts as Array<{ id: string | number; code: string; event_id?: string | number | null }> | undefined;
+    const discounts = data.discounts as Array<{ id: string | number; code: string }> | undefined;
     const match = discounts?.find(d => (d.code ?? '').toLowerCase() === code.toLowerCase());
-    if (!match) return null;
-
-    if (match.event_id != null) return { id: String(match.id), eventId: String(match.event_id) };
-
-    // Search results don't always include event scoping — fetch the discount directly to be sure.
-    const detail = await ebFetchSession(`/organizations/${orgId}/discounts/${match.id}/`);
-    return { id: String(match.id), eventId: detail.event_id != null ? String(detail.event_id) : null };
+    return match ? String(match.id) : null;
   } catch {
     return null;
   }
@@ -222,11 +231,14 @@ export async function ensureEventPromoCode(
   } catch (err) {
     if (!isDuplicateDiscountError(err)) throw err;
 
-    const existing = await findOrgDiscount(orgId, code);
-    if (existing?.eventId === eventId) return 'already_active';
+    // Check the target event directly first — this catches discounts created straight on
+    // the event (Promotions tab, or carried over by Eventbrite's own "duplicate event").
+    if (await findEventDiscountByCode(eventId, code)) return 'already_active';
 
-    if (!existing) throw new Error(`Could not find discount with code "${code}" to patch.`);
-    await addEventToExistingDiscount(orgId, existing.id, eventId);
+    // Not on this event — the code exists elsewhere in the org. Find it and attach this event too.
+    const discountId = await findOrgDiscount(orgId, code);
+    if (!discountId) throw new Error(`Could not find discount with code "${code}" to patch.`);
+    await addEventToExistingDiscount(orgId, discountId, eventId);
     return 'patched';
   }
 }
