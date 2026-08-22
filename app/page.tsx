@@ -9,7 +9,7 @@ export default function Home() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(7,7,7,0.85) 0%, rgba(7,7,7,0.7) 45%, rgba(7,7,7,0.6) 100%)',
+          background: 'radial-gradient(ellipse at center, rgba(7,7,7,0.65) 0%, rgba(7,7,7,0.45) 45%, rgba(7,7,7,0.3) 100%)',
         }}
       />
 
