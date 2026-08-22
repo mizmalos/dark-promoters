@@ -54,6 +54,29 @@ export function ticketsUntilNextMilestone(validTickets: number, threshold = 10):
 }
 
 /**
+ * Commission rules, per event: the first FREE_TICKET_THRESHOLD uses of a
+ * promoter's code earn them a free ticket (no cash commission) — every use
+ * after that earns COMMISSION_PER_SALE dollars.
+ */
+export const FREE_TICKET_THRESHOLD = 10;
+export const COMMISSION_PER_SALE = 5;
+
+/** Dollar commission earned on a single event, given its use count. */
+export function commissionForEvent(uses: number, threshold = FREE_TICKET_THRESHOLD, perSale = COMMISSION_PER_SALE): number {
+  return Math.max(0, uses - threshold) * perSale;
+}
+
+/** True once a promoter has earned their free ticket on an event. */
+export function hasEarnedFreeTicket(uses: number, threshold = FREE_TICKET_THRESHOLD): boolean {
+  return uses >= threshold;
+}
+
+/** How many more uses on an event until the free-ticket threshold is reached (0 once past it). */
+export function usesUntilFreeTicket(uses: number, threshold = FREE_TICKET_THRESHOLD): number {
+  return Math.max(0, threshold - uses);
+}
+
+/**
  * Generate a suggested link slug from promoter slug + event abbreviation.
  * e.g. ('claire', '240KMH F2F Melbourne September 2026') → 'claire-240kmh'
  */

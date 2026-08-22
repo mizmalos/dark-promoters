@@ -1,12 +1,11 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { db } from '@/lib/db';
-import { countValidTickets } from '@/lib/utils/tickets';
-import { ShareButton, CopyCodeButton } from '../ShareButton';
+import { countValidTickets, commissionForEvent, hasEarnedFreeTicket } from '@/lib/utils/tickets';
+import { CopyCodeButton } from '../ShareButton';
 import SignOutButton from './SignOutButton';
-
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
 export default async function PortalDashboardPage() {
   // Validate session server-side
@@ -41,10 +40,11 @@ export default async function PortalDashboardPage() {
   const salesPerAssignment = await Promise.all(
     assignments.map(a => db.sales.forAssignment(a.id)),
   );
-  const totalTickets = salesPerAssignment.reduce(
-    (sum, sales) => sum + countValidTickets(sales),
-    0,
-  );
+  const usesPerAssignment = salesPerAssignment.map(countValidTickets);
+  const commissionPerAssignment = usesPerAssignment.map(u => commissionForEvent(u));
+
+  const totalUses = usesPerAssignment.reduce((sum, u) => sum + u, 0);
+  const totalCommission = commissionPerAssignment.reduce((sum, c) => sum + c, 0);
 
   return (
     <div className="min-h-screen" style={{ background: '#070707' }}>
@@ -76,17 +76,19 @@ export default async function PortalDashboardPage() {
         {/* ── Performance ── */}
         <div className="dark-card p-6">
           <p className="label-meta mb-4">Your Performance</p>
-          <div className="flex items-end gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="metric-value-green" style={{ fontSize: '3rem' }}>{totalTickets}</span>
+              <span className="metric-value" style={{ fontSize: '2.25rem' }}>{totalUses}</span>
+              <p className="label-meta mt-1">Total Uses</p>
             </div>
-            <div className="mb-1">
-              <p className="font-semibold text-sm" style={{ color: '#F2F2EE' }}>Tickets Sold</p>
-              <p className="label-meta">
-                {assignments.length} active event{assignments.length !== 1 ? 's' : ''}
-              </p>
+            <div>
+              <span className="metric-value-green" style={{ fontSize: '2.25rem' }}>${totalCommission}</span>
+              <p className="label-meta mt-1">Commission Earned</p>
             </div>
           </div>
+          <p className="label-meta mt-5">
+            {assignments.length} active event{assignments.length !== 1 ? 's' : ''}
+          </p>
         </div>
 
         {/* ── Events ── */}
@@ -94,8 +96,7 @@ export default async function PortalDashboardPage() {
           <div className="space-y-3">
             <p className="label-meta-2">Your Events</p>
             {assignments.map((a, i) => {
-              const tickets = countValidTickets(salesPerAssignment[i]);
-              const shareUrl = `${BASE_URL}/m/${a.link_slug}`;
+              const uses = usesPerAssignment[i];
               const dateStr = a.event.event_date
                 ? new Date(a.event.event_date).toLocaleDateString('en-AU', {
                     day: 'numeric',
@@ -106,32 +107,25 @@ export default async function PortalDashboardPage() {
                 : null;
 
               return (
-                <div key={a.id} className="dark-card p-5 space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold" style={{ color: '#F2F2EE' }}>{a.event.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: '#555' }}>
-                        {[a.event.venue, dateStr].filter(Boolean).join(' · ')}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="font-black text-2xl" style={{ color: '#B7FF00' }}>{tickets}</span>
-                      <p className="label-meta">tickets</p>
-                    </div>
+                <Link
+                  key={a.id}
+                  href={`/portal/dashboard/${a.id}`}
+                  className="dark-card p-5 flex items-center justify-between gap-4 block transition-all hover:border-[#333]"
+                >
+                  <div className="min-w-0">
+                    <p className="font-bold truncate" style={{ color: '#F2F2EE' }}>{a.event.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: '#555' }}>
+                      {[a.event.venue, dateStr].filter(Boolean).join(' · ')}
+                    </p>
+                    {hasEarnedFreeTicket(uses) && (
+                      <span className="badge-active mt-2 inline-flex">Free ticket unlocked</span>
+                    )}
                   </div>
-
-                  <div className="space-y-2">
-                    <div
-                      className="flex items-center gap-2 rounded-lg px-3 py-2.5"
-                      style={{ background: '#111', border: '1px solid #1E1E1E' }}
-                    >
-                      <span className="font-mono text-xs flex-1 truncate" style={{ color: '#555' }}>
-                        {shareUrl}
-                      </span>
-                    </div>
-                    <ShareButton url={shareUrl} eventName={a.event.name} />
+                  <div className="text-right shrink-0">
+                    <span className="font-black text-2xl" style={{ color: '#B7FF00' }}>{uses}</span>
+                    <p className="label-meta">uses</p>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

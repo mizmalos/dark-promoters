@@ -8,6 +8,9 @@ import {
   isSafeRedirectUrl,
   suggestLinkSlug,
   isValidSale,
+  commissionForEvent,
+  hasEarnedFreeTicket,
+  usesUntilFreeTicket,
 } from '../lib/utils/tickets';
 import type { TicketSale } from '../lib/types';
 
@@ -178,6 +181,56 @@ describe('ticketsUntilNextMilestone', () => {
 
   it('returns 1 at 19 tickets', () => {
     expect(ticketsUntilNextMilestone(19)).toBe(1);
+  });
+});
+
+// ============================================================
+// Promoter commission
+// ============================================================
+describe('commissionForEvent', () => {
+  it('earns nothing below the free-ticket threshold', () => {
+    expect(commissionForEvent(0)).toBe(0);
+    expect(commissionForEvent(9)).toBe(0);
+  });
+
+  it('earns nothing at exactly the threshold (still just the free ticket)', () => {
+    expect(commissionForEvent(10)).toBe(0);
+  });
+
+  it('earns $5 for the first sale past the threshold', () => {
+    expect(commissionForEvent(11)).toBe(5);
+  });
+
+  it('earns $5 per sale past the threshold, not per block of 10', () => {
+    expect(commissionForEvent(15)).toBe(25);
+    expect(commissionForEvent(20)).toBe(50);
+  });
+
+  it('supports custom threshold/rate', () => {
+    expect(commissionForEvent(8, 5, 10)).toBe(30);
+  });
+});
+
+describe('hasEarnedFreeTicket', () => {
+  it('false below threshold', () => {
+    expect(hasEarnedFreeTicket(9)).toBe(false);
+  });
+
+  it('true at and above threshold', () => {
+    expect(hasEarnedFreeTicket(10)).toBe(true);
+    expect(hasEarnedFreeTicket(15)).toBe(true);
+  });
+});
+
+describe('usesUntilFreeTicket', () => {
+  it('counts down to the threshold', () => {
+    expect(usesUntilFreeTicket(0)).toBe(10);
+    expect(usesUntilFreeTicket(7)).toBe(3);
+  });
+
+  it('returns 0 at and past the threshold (never negative)', () => {
+    expect(usesUntilFreeTicket(10)).toBe(0);
+    expect(usesUntilFreeTicket(15)).toBe(0);
   });
 });
 
