@@ -84,6 +84,11 @@ export const db = {
       const { data } = await q;
       return (data?.length ?? 0) > 0;
     },
+
+    delete: async (id: string): Promise<void> => {
+      const { error } = await supabase.from('promoters').delete().eq('id', id);
+      if (error) throw error;
+    },
   },
 
   events: {

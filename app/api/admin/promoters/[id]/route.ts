@@ -40,3 +40,18 @@ export async function PATCH(
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const promoter = await db.promoters.get(id);
+  if (!promoter) return NextResponse.json({ error: 'Promoter not found.' }, { status: 404 });
+
+  await db.promoters.delete(id);
+
+  revalidatePath('/admin/promoters');
+
+  return NextResponse.json({ success: true });
+}

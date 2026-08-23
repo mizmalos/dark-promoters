@@ -5,6 +5,7 @@ import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
 import { PushEventbriteButton, CopyLinkButton } from './EventbriteActions';
 import AssignEventsPanel from './AssignEventsPanel';
 import { InviteButton } from './InviteButton';
+import { DeleteButton } from './DeleteButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
@@ -199,6 +200,24 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
       {unassignedEvents.length > 0 && (
         <AssignEventsPanel promoterId={promoter.id} unassignedEvents={unassignedEvents} />
       )}
+
+      {/* ── Danger zone ── */}
+      <div className="dark-card p-6" style={{ border: '1px solid rgba(255,68,68,0.15)' }}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="label-meta-2" style={{ color: '#FF4444' }}>Danger Zone</p>
+            <p className="text-xs mt-1" style={{ color: '#555' }}>
+              Permanently delete this promoter and all their data. This cannot be undone.
+            </p>
+          </div>
+          <DeleteButton
+            promoterId={promoter.id}
+            promoterName={promoter.name}
+            eventCount={assignments.length}
+            ticketCount={totalTickets}
+          />
+        </div>
+      </div>
     </div>
   );
 }
