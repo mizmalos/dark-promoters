@@ -99,7 +99,6 @@ export default async function PromotersPage() {
                   <th>Tickets</th>
                   <th>Events</th>
                   <th>Status</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -109,6 +108,11 @@ export default async function PromotersPage() {
                   return (
                     <tr key={p.id}>
                       <td>
+                        <Link
+                          href={`/admin/promoters/${p.id}`}
+                          className="row-link-cover"
+                          aria-label={`View ${p.name}`}
+                        />
                         <div className="flex items-center gap-3">
                           <div
                             className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -136,14 +140,6 @@ export default async function PromotersPage() {
                         <span className={p.is_active ? 'badge-active' : 'badge-inactive'}>
                           {p.is_active ? 'Active' : 'Inactive'}
                         </span>
-                      </td>
-                      <td>
-                        <Link
-                          href={`/admin/promoters/${p.id}`}
-                          className="row-link-cover label-meta-2 transition-colors hover:text-[#F2F2EE]"
-                        >
-                          View →
-                        </Link>
                       </td>
                     </tr>
                   );

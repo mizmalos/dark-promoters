@@ -315,10 +315,11 @@ body {
 .dark-table tbody tr:hover td     { background: rgba(255,255,255,0.015); }
 .dark-table tbody tr              { position: relative; }
 
-/* Stretches a link to cover its entire ancestor row, so the whole row is
-   clickable while only one real, focusable link exists in the DOM. Any other
-   interactive element added to a row later needs a higher z-index (or this
-   removed from that row) so it isn't shadowed by the overlay. */
+/* Stretches an (otherwise empty, aria-labelled) link to cover its entire
+   ancestor row, so the whole row is clickable while only one real, focusable
+   link exists in the DOM. Any other interactive element added to a row later
+   needs a higher z-index (or this removed from that row) so it isn't
+   shadowed by the overlay. */
 .row-link-cover { position: absolute; inset: 0; z-index: 1; }
 
 /* ── Progress bar ── */
