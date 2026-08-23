@@ -14,10 +14,17 @@ export default function NewPromoterPage() {
   const [slug, setSlug] = useState('');
   const [promoCode, setPromoCode] = useState('');
 
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setSlug(
+      e.target.value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+    );
+  }
+
   function handlePromoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    setPromoCode(code);
-    setSlug(code.toLowerCase());
+    setPromoCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -60,6 +67,7 @@ export default function NewPromoterPage() {
             <input
               name="name"
               required
+              onChange={handleNameChange}
               className="dark-input"
             />
           </div>
