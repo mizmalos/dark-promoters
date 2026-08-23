@@ -34,7 +34,7 @@ export default function EditPromoterForm({ promoter }: { promoter: Promoter }) {
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setLoading(false); return; }
-    router.push(`/admin/promoters/${promoter.id}`);
+    router.push(`/admin/promoters/${promoter.slug}`);
     router.refresh();
   }
 
@@ -42,7 +42,7 @@ export default function EditPromoterForm({ promoter }: { promoter: Promoter }) {
     <div className="max-w-2xl space-y-6">
       <div>
         <Link
-          href={`/admin/promoters/${promoter.id}`}
+          href={`/admin/promoters/${promoter.slug}`}
           className="label-meta inline-flex items-center gap-1.5 transition-colors hover:text-[#F2F2EE] mb-4 block"
         >
           ← {promoter.name}
@@ -115,7 +115,7 @@ export default function EditPromoterForm({ promoter }: { promoter: Promoter }) {
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Saving…' : 'Save Changes'}
           </button>
-          <Link href={`/admin/promoters/${promoter.id}`} className="btn-secondary">Cancel</Link>
+          <Link href={`/admin/promoters/${promoter.slug}`} className="btn-secondary">Cancel</Link>
         </div>
       </form>
     </div>

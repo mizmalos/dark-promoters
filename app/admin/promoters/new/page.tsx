@@ -33,7 +33,7 @@ export default function NewPromoterPage() {
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setLoading(false); return; }
-    router.push(`/admin/promoters/${data.id}`);
+    router.push(`/admin/promoters/${data.slug}`);
   }
 
   return (

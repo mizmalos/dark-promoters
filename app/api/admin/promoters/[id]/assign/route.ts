@@ -68,7 +68,7 @@ export async function POST(
   }
 
   if (created > 0) {
-    revalidatePath(`/admin/promoters/${promoter_id}`);
+    revalidatePath(`/admin/promoters/${promoter.slug}`);
     revalidatePath('/admin/promoters');
     for (const event_id of uniqueIds) revalidatePath(`/admin/events/${event_id}`);
   }

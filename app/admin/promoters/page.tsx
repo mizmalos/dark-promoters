@@ -45,7 +45,7 @@ export default async function PromotersPage() {
           const tickets = ticketsByPromoter.get(p.id) ?? 0;
           const eventCount = allAssignments[promoters.indexOf(p)]?.length ?? 0;
           return (
-            <Link key={p.id} href={`/admin/promoters/${p.id}`} className="dark-card p-5 block transition-all hover:border-[#333]">
+            <Link key={p.id} href={`/admin/promoters/${p.slug}`} className="dark-card p-5 block transition-all hover:border-[#333]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div
@@ -109,7 +109,7 @@ export default async function PromotersPage() {
                     <tr key={p.id}>
                       <td>
                         <Link
-                          href={`/admin/promoters/${p.id}`}
+                          href={`/admin/promoters/${p.slug}`}
                           className="row-link-cover"
                           aria-label={`View ${p.name}`}
                         />

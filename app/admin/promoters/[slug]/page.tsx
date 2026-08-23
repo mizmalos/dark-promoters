@@ -9,9 +9,9 @@ import { DeleteButton } from './DeleteButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
-export default async function PromoterDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const promoter = await db.promoters.get(id);
+export default async function PromoterDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const promoter = await db.promoters.getBySlug(slug);
   if (!promoter) notFound();
 
   const [assignments, allEvents] = await Promise.all([
@@ -99,7 +99,7 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
           <p className="label-meta-2">Details</p>
           <div className="flex items-center gap-2">
             {promoter.email && <InviteButton promoterId={promoter.id} />}
-            <Link href={`/admin/promoters/${promoter.id}/edit`} className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
+            <Link href={`/admin/promoters/${promoter.slug}/edit`} className="btn-secondary" style={{ padding: '6px 14px' }}>Edit</Link>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4">

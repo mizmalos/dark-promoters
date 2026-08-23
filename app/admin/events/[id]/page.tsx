@@ -117,7 +117,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
                       </td>
                       <td>
                         <Link
-                          href={`/admin/promoters/${pe.promoter_id}`}
+                          href={`/admin/promoters/${pe.promoter.slug}`}
                           className="font-semibold transition-colors hover:text-[#B7FF00]"
                           style={{ color: '#F2F2EE' }}
                         >

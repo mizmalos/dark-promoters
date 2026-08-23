@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   }
 
   revalidatePath(`/admin/events/${event_id}`);
-  revalidatePath(`/admin/promoters/${promoter_id}`);
+  revalidatePath(`/admin/promoters/${promoter.slug}`);
   revalidatePath('/admin/promoters');
 
   // Redirect back to event page for form submissions

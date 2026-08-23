@@ -36,7 +36,7 @@ export async function PATCH(
   });
 
   revalidatePath('/admin/promoters');
-  revalidatePath(`/admin/promoters/${id}`);
+  revalidatePath(`/admin/promoters/${promoter.slug}`);
 
   return NextResponse.json(updated);
 }
