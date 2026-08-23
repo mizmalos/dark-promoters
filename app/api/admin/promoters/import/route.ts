@@ -17,6 +17,7 @@ interface CsvRow {
   city?: string;
   state?: string;
   notes?: string;
+  promo_code?: string;
 }
 
 interface Skipped {
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
 
   const skipped: Skipped[] = [];
   const seenEmails = new Set<string>();
+  const seenCodes = new Set<string>();
   let created = 0;
 
   for (let i = 0; i < rows.length; i++) {
@@ -81,9 +83,19 @@ export async function POST(req: NextRequest) {
     const stateRaw = row.state?.trim().toUpperCase() ?? '';
     const state = VALID_STATES.has(stateRaw as AustralianState) ? (stateRaw as AustralianState) : null;
 
+    const providedCode = row.promo_code?.trim().toUpperCase() ?? '';
+    if (providedCode && seenCodes.has(providedCode)) {
+      skipped.push({ row: rowNum, name, email, reason: 'Duplicate promo code within this file.' });
+      continue;
+    }
+    if (providedCode && await db.promoters.codeExists(providedCode)) {
+      skipped.push({ row: rowNum, name, email, reason: `Promo code "${providedCode}" is already in use.` });
+      continue;
+    }
+
     try {
       const slug = await generateUniquePromoterSlug(name);
-      const promo_code = await generateUniquePromoterCode(name);
+      const promo_code = providedCode || await generateUniquePromoterCode(name);
 
       await db.promoters.create({
         name,
@@ -100,6 +112,7 @@ export async function POST(req: NextRequest) {
       });
 
       seenEmails.add(email);
+      if (providedCode) seenCodes.add(providedCode);
       created++;
 
       const result = await ensureAuthUser(email);

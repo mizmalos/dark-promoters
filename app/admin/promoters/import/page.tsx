@@ -61,12 +61,13 @@ export default function ImportPromotersPage() {
           First row must be a header with these column names (any order, case-insensitive):
         </p>
         <div className="rounded-lg px-4 py-3 font-mono text-xs" style={{ background: '#111', border: '1px solid #1E1E1E', color: '#B7FF00' }}>
-          name,email,phone,instagram,city,state,notes
+          name,email,phone,instagram,city,state,notes,promo_code
         </div>
         <ul className="text-xs space-y-1" style={{ color: '#555' }}>
           <li><span style={{ color: '#888' }}>name</span> and <span style={{ color: '#888' }}>email</span> are required — rows missing either are skipped.</li>
           <li><span style={{ color: '#888' }}>state</span> must be NSW, VIC, QLD or ACT (blank is fine).</li>
-          <li>Slug and promo code are auto-generated for every row, same as the self-serve signup form.</li>
+          <li><span style={{ color: '#888' }}>promo_code</span> is optional — if a row already has an existing code (e.g. one they&apos;re already promoting with), include it and it will be kept exactly as given, as long as it&apos;s not already in use. Leave it blank to auto-generate one, same as the self-serve signup form.</li>
+          <li>Slug is always auto-generated.</li>
           <li>Each promoter is created active with silent portal access — no email is sent.</li>
         </ul>
       </div>
