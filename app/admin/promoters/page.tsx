@@ -1,7 +1,13 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { SortSelect, SORT_OPTIONS, type SortValue } from './SortSelect';
 
-export default async function PromotersPage() {
+const DEFAULT_SORT: SortValue = 'name-asc';
+
+export default async function PromotersPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
+  const { sort: sortParam } = await searchParams;
+  const sort: SortValue = SORT_OPTIONS.some(o => o.value === sortParam) ? (sortParam as SortValue) : DEFAULT_SORT;
+
   const promoters = await db.promoters.list();
   const allAssignments = await Promise.all(promoters.map(p => db.assignments.forPromoter(p.id)));
   const ticketsByPromoter = new Map(
@@ -10,6 +16,19 @@ export default async function PromotersPage() {
       allAssignments[i].reduce((sum, a) => sum + a.tickets_sold, 0),
     ])
   );
+  const eventCountByPromoter = new Map(promoters.map((p, i) => [p.id, allAssignments[i].length]));
+
+  const sorted = [...promoters].sort((a, b) => {
+    switch (sort) {
+      case 'name-desc': return b.name.localeCompare(a.name);
+      case 'code-asc':  return a.promo_code.localeCompare(b.promo_code);
+      case 'code-desc': return b.promo_code.localeCompare(a.promo_code);
+      case 'uses-asc':  return (ticketsByPromoter.get(a.id) ?? 0) - (ticketsByPromoter.get(b.id) ?? 0);
+      case 'uses-desc': return (ticketsByPromoter.get(b.id) ?? 0) - (ticketsByPromoter.get(a.id) ?? 0);
+      case 'name-asc':
+      default:          return a.name.localeCompare(b.name);
+    }
+  });
 
   return (
     <div className="space-y-6">
@@ -20,6 +39,7 @@ export default async function PromotersPage() {
           <h1 className="page-title">Promoters</h1>
         </div>
         <div className="flex items-center gap-2 mt-1">
+          <SortSelect value={sort} />
           <Link href="/admin/promoters/import" className="btn-secondary">
             Import CSV
           </Link>
@@ -41,9 +61,9 @@ export default async function PromotersPage() {
 
       {/* ── Mobile cards ── */}
       <div className="md:hidden space-y-3">
-        {promoters.map(p => {
+        {sorted.map(p => {
           const tickets = ticketsByPromoter.get(p.id) ?? 0;
-          const eventCount = allAssignments[promoters.indexOf(p)]?.length ?? 0;
+          const eventCount = eventCountByPromoter.get(p.id) ?? 0;
           return (
             <Link key={p.id} href={`/admin/promoters/${p.slug}`} className="dark-card p-5 block transition-all hover:border-[#333]">
               <div className="flex items-center justify-between mb-3">
@@ -102,9 +122,9 @@ export default async function PromotersPage() {
                 </tr>
               </thead>
               <tbody>
-                {promoters.map((p, i) => {
+                {sorted.map(p => {
                   const tickets    = ticketsByPromoter.get(p.id) ?? 0;
-                  const eventCount = allAssignments[i]?.length ?? 0;
+                  const eventCount = eventCountByPromoter.get(p.id) ?? 0;
                   return (
                     <tr key={p.id}>
                       <td>
