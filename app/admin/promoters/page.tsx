@@ -138,7 +138,10 @@ export default async function PromotersPage() {
                         </span>
                       </td>
                       <td>
-                        <Link href={`/admin/promoters/${p.id}`} className="label-meta-2 transition-colors hover:text-[#F2F2EE]">
+                        <Link
+                          href={`/admin/promoters/${p.id}`}
+                          className="row-link-cover label-meta-2 transition-colors hover:text-[#F2F2EE]"
+                        >
                           View →
                         </Link>
                       </td>
