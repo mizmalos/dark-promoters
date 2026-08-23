@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { SortSelect, SORT_OPTIONS, type SortValue } from './SortSelect';
+import { SortSelect } from './SortSelect';
+import { SORT_OPTIONS, type SortValue } from './sortOptions';
 
 const DEFAULT_SORT: SortValue = 'name-asc';
 
