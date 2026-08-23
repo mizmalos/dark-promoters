@@ -40,7 +40,11 @@ export default function NewPromoterPage() {
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setLoading(false); return; }
-    router.push(`/admin/promoters/${data.slug}`);
+    router.push(
+      data.auth_warning
+        ? `/admin/promoters/${data.slug}?auth_warning=1`
+        : `/admin/promoters/${data.slug}`
+    );
   }
 
   return (

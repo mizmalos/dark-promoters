@@ -27,6 +27,13 @@ interface Skipped {
   reason: string;
 }
 
+interface AuthWarning {
+  row: number;
+  name: string;
+  email: string;
+  reason: string;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json() as { csv?: string };
   if (!body.csv?.trim()) {
@@ -52,6 +59,7 @@ export async function POST(req: NextRequest) {
   }
 
   const skipped: Skipped[] = [];
+  const authWarnings: AuthWarning[] = [];
   const seenEmails = new Set<string>();
   const seenCodes = new Set<string>();
   let created = 0;
@@ -118,6 +126,7 @@ export async function POST(req: NextRequest) {
       const result = await ensureAuthUser(email);
       if (!result.ok) {
         console.error('[promoters/import] Account provisioning failed for', email, ':', result.error);
+        authWarnings.push({ row: rowNum, name, email, reason: result.error });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -128,5 +137,5 @@ export async function POST(req: NextRequest) {
 
   if (created > 0) revalidatePath('/admin/promoters');
 
-  return NextResponse.json({ created, skipped });
+  return NextResponse.json({ created, skipped, authWarnings });
 }

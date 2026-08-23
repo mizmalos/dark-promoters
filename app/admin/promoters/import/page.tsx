@@ -11,12 +11,19 @@ interface Skipped {
   reason: string;
 }
 
+interface AuthWarning {
+  row: number;
+  name: string;
+  email: string;
+  reason: string;
+}
+
 export default function ImportPromotersPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-  const [result, setResult] = useState<{ created: number; skipped: Skipped[] } | null>(null);
+  const [result, setResult] = useState<{ created: number; skipped: Skipped[]; authWarnings: AuthWarning[] } | null>(null);
 
   async function handleUpload() {
     if (!file) return;
@@ -112,6 +119,24 @@ export default function ImportPromotersPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+            {result.authWarnings.length > 0 && (
+              <div className="rounded-lg p-4 text-sm" style={{ background: 'rgba(255,68,68,0.06)', border: '1px solid rgba(255,68,68,0.2)' }}>
+                <p className="font-semibold mb-2" style={{ color: '#FF4444' }}>
+                  {result.authWarnings.length} promoter{result.authWarnings.length === 1 ? '' : 's'} created but couldn&apos;t get portal access
+                </p>
+                <ul className="space-y-1 mb-2" style={{ color: '#888' }}>
+                  {result.authWarnings.map((w, i) => (
+                    <li key={i}>
+                      Row {w.row}{w.name ? ` (${w.name})` : ''}
+                      {w.email ? ` — ${w.email}` : ''}: {w.reason}
+                    </li>
+                  ))}
+                </ul>
+                <p style={{ color: '#888' }}>
+                  These rows were still imported — open each promoter&apos;s profile and click &quot;Enable Portal Access&quot; to retry.
+                </p>
               </div>
             )}
           </div>

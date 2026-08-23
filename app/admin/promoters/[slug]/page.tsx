@@ -9,8 +9,15 @@ import { DeleteButton } from './DeleteButton';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
-export default async function PromoterDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PromoterDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ auth_warning?: string }>;
+}) {
   const { slug } = await params;
+  const { auth_warning } = await searchParams;
   const promoter = await db.promoters.getBySlug(slug);
   if (!promoter) notFound();
 
@@ -30,6 +37,13 @@ export default async function PromoterDetailPage({ params }: { params: Promise<{
       <Link href="/admin/promoters" className="label-meta inline-flex items-center gap-1.5 transition-colors hover:text-[#F2F2EE]">
         ← Promoters
       </Link>
+
+      {/* ── Portal provisioning warning ── */}
+      {auth_warning === '1' && (
+        <div className="rounded-lg p-4 text-sm" style={{ background: 'rgba(255,68,68,0.06)', border: '1px solid rgba(255,68,68,0.2)', color: '#FF4444' }}>
+          {promoter.name} was created, but their portal account couldn&apos;t be provisioned automatically. Click &quot;Enable Portal Access&quot; below to retry.
+        </div>
+      )}
 
       {/* ── Header ── */}
       <div className="flex items-start gap-4">
