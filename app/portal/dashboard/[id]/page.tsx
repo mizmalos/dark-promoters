@@ -111,7 +111,7 @@ export default async function PortalEventDetailPage({ params }: { params: Promis
             className="flex items-center gap-2 rounded-lg px-3 py-2.5"
             style={{ background: '#111', border: '1px solid #1E1E1E' }}
           >
-            <span className="font-mono text-xs flex-1 truncate" style={{ color: '#555' }}>{shareUrl}</span>
+            <span className="font-mono text-xs flex-1 truncate" style={{ color: '#555' }}>{shareUrl.replace(/^https?:\/\//, '')}</span>
           </div>
           <ShareButton url={shareUrl} eventName={assignment.event.name} />
         </div>
