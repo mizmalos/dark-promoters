@@ -30,6 +30,21 @@ function SortableHeader({ label, column, sort }: { label: string; column: SortCo
   );
 }
 
+function SortChip({ label, column, sort }: { label: string; column: SortColumn; sort: SortValue }) {
+  const active = sort.startsWith(`${column}-`);
+  const asc = sort.endsWith('-asc');
+  return (
+    <Link
+      href={`/admin/promoters?sort=${nextSort(sort, column)}`}
+      className="label-meta inline-flex items-center gap-1"
+      style={active ? { color: '#B7FF00' } : undefined}
+    >
+      {label}
+      {active && <span>{asc ? '↑' : '↓'}</span>}
+    </Link>
+  );
+}
+
 export default async function PromotersPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   const { sort: sortParam } = await searchParams;
   const sort: SortValue = SORT_OPTIONS.some(o => o.value === sortParam) ? (sortParam as SortValue) : DEFAULT_SORT;
@@ -81,6 +96,16 @@ export default async function PromotersPage({ searchParams }: { searchParams: Pr
           <Link href="/admin/promoters/new" className="btn-primary mt-4 mx-auto">
             Add first promoter
           </Link>
+        </div>
+      )}
+
+      {/* ── Mobile sort ── */}
+      {promoters.length > 0 && (
+        <div className="md:hidden flex items-center gap-4 px-1">
+          <span className="label-meta" style={{ color: '#555' }}>Sort:</span>
+          <SortChip label="Name" column="name" sort={sort} />
+          <SortChip label="Code" column="code" sort={sort} />
+          <SortChip label="Tickets" column="uses" sort={sort} />
         </div>
       )}
 
