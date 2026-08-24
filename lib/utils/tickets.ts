@@ -28,7 +28,9 @@ export function countValidTickets(sales: TicketSale[]): number {
  * Remove duplicate sales by (order_id, attendee_id) pair.
  * Keeps the first occurrence.
  */
-export function deduplicateSales(sales: TicketSale[]): TicketSale[] {
+export function deduplicateSales<T extends Pick<TicketSale, 'eventbrite_order_id' | 'eventbrite_attendee_id'>>(
+  sales: T[]
+): T[] {
   const seen = new Set<string>();
   return sales.filter((sale) => {
     const key = `${sale.eventbrite_order_id}::${sale.eventbrite_attendee_id}`;

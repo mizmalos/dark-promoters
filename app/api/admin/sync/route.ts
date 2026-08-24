@@ -24,14 +24,12 @@ export async function POST(req: NextRequest) {
         // Dedup before upsert
         const unique = deduplicateSales(
           relevant.map(a => ({
-            id: '',
             promoter_event_id: assignment.id,
             eventbrite_order_id: a.order_id,
             eventbrite_attendee_id: a.id,
             quantity: a.quantity,
             status: a.status as TicketStatus,
             order_date: a.created,
-            synced_at: new Date().toISOString(),
           }))
         );
 
