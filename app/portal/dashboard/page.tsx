@@ -82,7 +82,7 @@ export default async function PortalDashboardPage() {
           <div className="dark-card p-6 space-y-5" style={{ border: '1px solid rgba(183,255,0,0.12)' }}>
             <div>
               <p className="label-meta mb-0.5">Welcome,</p>
-              <h1 className="font-black text-3xl tracking-[0.05em]" style={{ color: '#F2F2EE' }}>
+              <h1 className="font-black text-3xl" style={{ color: '#F2F2EE' }}>
                 {promoter.name.split(' ')[0]}
               </h1>
               <p className="text-sm mt-2" style={{ color: '#555' }}>
@@ -111,8 +111,8 @@ export default async function PortalDashboardPage() {
         ) : (
           <div>
             <p className="label-meta mb-0.5">Welcome back,</p>
-            <h1 className="font-black text-3xl tracking-[0.05em]" style={{ color: '#F2F2EE' }}>
-              {promoter.name.split(' ')[0].toUpperCase()}.
+            <h1 className="font-black text-3xl" style={{ color: '#F2F2EE' }}>
+              {promoter.name.split(' ')[0].toUpperCase()}
             </h1>
           </div>
         )}
