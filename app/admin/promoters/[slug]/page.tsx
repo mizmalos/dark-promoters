@@ -143,7 +143,7 @@ export default async function PromoterDetailPage({
                 <p className="label-meta mb-2">{a.event.name}</p>
                 <CopyLinkButton
                   url={`${BASE_URL}/m/${a.link_slug}`}
-                  label={`${BASE_URL}/m/${a.link_slug}`}
+                  label={`${BASE_URL}/m/${a.link_slug}`.replace(/^https?:\/\//, '')}
                 />
               </div>
             ))}
