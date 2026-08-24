@@ -1,9 +1,34 @@
 import Link from 'next/link';
 import { db } from '@/lib/db';
-import { SortSelect } from './SortSelect';
 import { SORT_OPTIONS, type SortValue } from './sortOptions';
 
 const DEFAULT_SORT: SortValue = 'name-asc';
+
+type SortColumn = 'name' | 'code' | 'uses';
+
+function nextSort(current: SortValue, column: SortColumn): SortValue {
+  switch (column) {
+    case 'name': return current === 'name-asc' ? 'name-desc' : 'name-asc';
+    case 'code': return current === 'code-asc' ? 'code-desc' : 'code-asc';
+    case 'uses': return current === 'uses-desc' ? 'uses-asc' : 'uses-desc';
+  }
+}
+
+function SortableHeader({ label, column, sort }: { label: string; column: SortColumn; sort: SortValue }) {
+  const active = sort.startsWith(`${column}-`);
+  const asc = sort.endsWith('-asc');
+  return (
+    <th>
+      <Link
+        href={`/admin/promoters?sort=${nextSort(sort, column)}`}
+        className="inline-flex items-center gap-1 transition-colors hover:text-[#F2F2EE]"
+      >
+        {label}
+        {active && <span style={{ color: '#B7FF00' }}>{asc ? '↑' : '↓'}</span>}
+      </Link>
+    </th>
+  );
+}
 
 export default async function PromotersPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   const { sort: sortParam } = await searchParams;
@@ -40,7 +65,6 @@ export default async function PromotersPage({ searchParams }: { searchParams: Pr
           <h1 className="page-title">Promoters</h1>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <SortSelect value={sort} />
           <Link href="/admin/promoters/import" className="btn-secondary">
             Import CSV
           </Link>
@@ -113,11 +137,11 @@ export default async function PromotersPage({ searchParams }: { searchParams: Pr
             <table className="dark-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Code</th>
+                  <SortableHeader label="Name" column="name" sort={sort} />
+                  <SortableHeader label="Code" column="code" sort={sort} />
                   <th>Location</th>
                   <th>Instagram</th>
-                  <th>Tickets</th>
+                  <SortableHeader label="Tickets" column="uses" sort={sort} />
                   <th>Events</th>
                   <th>Status</th>
                 </tr>
