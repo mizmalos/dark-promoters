@@ -41,9 +41,12 @@ body {
 }
 
 /* ── Ambient top glow ──
-   Fixed behind all page content (see layout.tsx, which gives its content
-   wrapper position:relative + z-index:1 to sit above this). Purely
-   decorative and non-interactive. */
+   Most page-level wrappers in this app paint their own opaque background,
+   so a glow placed *behind* content (z-index below normal flow) would be
+   fully hidden — confirmed live. Instead this renders as a translucent,
+   non-interactive overlay above content (still below sticky headers'
+   z-10 and .cursor-mist's z-60), blending via its own alpha rather than
+   needing a transparent hole punched through every page. */
 .top-glow {
   position: fixed;
   top: -30%;
@@ -54,7 +57,7 @@ body {
   background: radial-gradient(ellipse at center, rgba(183,255,0,0.10) 0%, rgba(183,255,0,0.03) 40%, transparent 70%);
   filter: blur(60px);
   pointer-events: none;
-  z-index: 0;
+  z-index: 2;
 }
 
 /* ── Reusable cards ──
