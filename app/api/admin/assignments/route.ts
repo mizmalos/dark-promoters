@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { suggestLinkSlug } from '@/lib/utils/tickets';
+import { getErrorMessage } from '@/lib/utils/errors';
 
 export async function POST(req: NextRequest) {
   // Handle both JSON and form submissions
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
   try {
     assignment = await db.assignments.create(promoter_id, event_id, link_slug);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = getErrorMessage(err);
     console.error('[assignments] create failed:', msg);
     if (!contentType.includes('application/json')) {
       return NextResponse.redirect(

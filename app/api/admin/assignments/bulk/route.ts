@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { suggestLinkSlug } from '@/lib/utils/tickets';
 import { uniqueAssignmentSlug } from '@/lib/utils/assign';
+import { getErrorMessage } from '@/lib/utils/errors';
 
 const CHUNK_SIZE = 25;
 
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
         await db.assignments.create(promoter_id, event_id, link_slug);
         created++;
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+        const msg = getErrorMessage(err);
         console.error('[assignments/bulk] create failed:', promoter_id, msg);
         const duplicate = msg.toLowerCase().includes('duplicate') || msg.includes('23505');
         skipped.push({

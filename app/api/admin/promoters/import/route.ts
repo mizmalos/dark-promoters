@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import { db } from '@/lib/db';
 import { ensureAuthUser } from '@/lib/supabase';
 import { generateUniquePromoterSlug, generateUniquePromoterCode } from '@/lib/utils/promoter-codes';
+import { getErrorMessage } from '@/lib/utils/errors';
 import type { AustralianState } from '@/lib/types';
 
 const MAX_ROWS = 1000;
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
         authWarnings.push({ row: rowNum, name, email, reason: result.error });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = getErrorMessage(err);
       console.error('[promoters/import] create failed:', email, msg);
       skipped.push({ row: rowNum, name, email, reason: msg });
     }

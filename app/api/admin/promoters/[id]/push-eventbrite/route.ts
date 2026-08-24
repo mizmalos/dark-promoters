@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ensureEventPromoCode, ebFetchDebug, getOrganizationId, EventbriteApiError } from '@/lib/eventbrite/api';
+import { getErrorMessage } from '@/lib/utils/errors';
 
 export async function POST(
   _req: NextRequest,
@@ -13,7 +14,7 @@ export async function POST(
     const me = await ebFetchDebug('/users/me/');
     console.log('[Eventbrite] Token is valid. Authenticated as:', JSON.stringify(me));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = getErrorMessage(err);
     console.error('[Eventbrite] Token check failed:', msg);
     return NextResponse.json({ error: `Eventbrite token invalid: ${msg}` }, { status: 401 });
   }
@@ -41,7 +42,7 @@ export async function POST(
       const outcome = await ensureEventPromoCode(orgId, promoter.promo_code, a.event.eventbrite_event_id!);
       results.push({ event: a.event.name, status: outcome });
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      const message = getErrorMessage(err);
       const isAuthFailure =
         (err instanceof EventbriteApiError && err.status === 401) ||
         message.toLowerCase().includes('csrf') ||

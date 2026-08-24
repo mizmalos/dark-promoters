@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { fetchEventAttendees } from '@/lib/eventbrite/api';
 import { deduplicateSales } from '@/lib/utils/tickets';
+import { getErrorMessage } from '@/lib/utils/errors';
 import type { TicketStatus } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
@@ -48,7 +49,8 @@ export async function POST(req: NextRequest) {
       await db.syncLogs.add({ event_id: event.id, sync_type: 'manual', status: 'success', records_processed: processed, error_message: null });
       results.push({ event: event.name, status: 'success', records: processed });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
+      console.error('[sync] event', event.id, err);
+      const msg = getErrorMessage(err);
       await db.syncLogs.add({ event_id: event.id, sync_type: 'manual', status: 'error', records_processed: 0, error_message: msg });
       results.push({ event: event.name, status: 'error', error: msg });
     }
