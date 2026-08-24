@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   // Redirect back to sync page for form submissions
   const contentType = req.headers.get('content-type') ?? '';
   if (!contentType.includes('application/json')) {
-    return NextResponse.redirect(new URL('/admin/sync', req.url));
+    return NextResponse.redirect(new URL('/admin/sync', req.url), 303);
   }
 
   return NextResponse.json({ results });
