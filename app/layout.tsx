@@ -18,7 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`h-full ${inter.variable}`}>
       <body className="min-h-full antialiased" style={{ background: '#070707', color: '#F2F2EE' }}>
-        {children}
+        <div aria-hidden className="top-glow" />
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          {children}
+        </div>
         <CursorGlow />
       </body>
     </html>

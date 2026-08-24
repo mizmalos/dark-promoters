@@ -68,7 +68,7 @@ export default function JoinPage() {
       <div className="max-w-sm mx-auto">
         {/* Logo */}
         <div className="text-center mb-10">
-          <Image src="/dark-logo.png" alt="DARK" width={80} height={14} className="mx-auto mb-3" priority />
+          <Image src="/dark-logo.png" alt="DARK" width={150} height={27} className="mx-auto mb-3" priority />
           <p className="label-meta">Become a Promoter</p>
         </div>
 

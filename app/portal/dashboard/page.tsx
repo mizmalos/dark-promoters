@@ -69,7 +69,7 @@ export default async function PortalDashboardPage() {
           borderBottom: '1px solid #1a1a1a',
         }}
       >
-        <Image src="/dark-logo.png" alt="DARK" width={56} height={10} priority />
+        <Image src="/dark-logo.png" alt="DARK" width={150} height={27} priority />
         <div className="flex items-center gap-4">
           <span className="label-meta hidden sm:block">Promoter Portal</span>
           <SignOutButton />
@@ -154,7 +154,7 @@ export default async function PortalDashboardPage() {
                 <Link
                   key={a.id}
                   href={`/portal/dashboard/${a.link_slug}`}
-                  className="dark-card p-5 flex items-center justify-between gap-4 block transition-all hover:border-[#333]"
+                  className="dark-card p-5 flex items-center justify-between gap-4 block transition-all"
                 >
                   <div className="min-w-0">
                     <p className="font-bold truncate" style={{ color: '#F2F2EE' }}>{a.event.name}</p>

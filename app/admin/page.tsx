@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
       {/* ── Metrics ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {metrics.map(m => (
-          <Link key={m.label} href={m.href} className="dark-card p-5 block transition-all duration-150 hover:border-[#333]">
+          <Link key={m.label} href={m.href} className="dark-card p-5 block transition-all duration-150">
             <p className="label-meta mb-3">{m.label}</p>
             <p className={m.green ? 'metric-value-green' : 'metric-value'}>{m.value}</p>
           </Link>

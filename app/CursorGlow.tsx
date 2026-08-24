@@ -9,7 +9,7 @@ import { useEffect } from 'react';
 //  - Atmospheric mist: a single shared floating element (.cursor-mist, created below),
 //    NOT a child of any field, positioned in real viewport coordinates so it's free to
 //    spill outside whichever field is active — a background can never do that on its own.
-const SELECTOR = '.dark-input, .dark-select, .dark-textarea';
+const SELECTOR = '.dark-input, .dark-select, .dark-textarea, .dark-card, .dark-card-2, .btn-primary, .btn-secondary';
 const EASE = 0.14;
 const EDGE_PEAK = 0.42;
 const MIST_PEAK = 0.09;

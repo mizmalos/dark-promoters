@@ -55,7 +55,7 @@ export default async function PortalEventDetailPage({ params }: { params: Promis
         className="sticky top-0 z-10 px-5 py-4 flex items-center justify-between"
         style={{ background: 'rgba(7,7,7,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #1a1a1a' }}
       >
-        <Image src="/dark-logo.png" alt="DARK" width={56} height={10} priority />
+        <Image src="/dark-logo.png" alt="DARK" width={150} height={27} priority />
         <div className="flex items-center gap-4">
           <span className="label-meta hidden sm:block">Promoter Portal</span>
           <SignOutButton />

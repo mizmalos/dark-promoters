@@ -42,7 +42,7 @@ export default async function EventsPage() {
             : null;
 
           return (
-            <div key={event.id} className="dark-card p-5 transition-all hover:border-[#333]">
+            <div key={event.id} className="dark-card p-5 transition-all">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">

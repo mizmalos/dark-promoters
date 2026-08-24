@@ -68,7 +68,7 @@ export default function AdminNav() {
         style={{ background: '#070707', borderRight: '1px solid #1a1a1a' }}
       >
         <div className="px-5 pt-7 pb-6" style={{ borderBottom: '1px solid #1a1a1a' }}>
-          <Image src="/dark-logo.png" alt="DARK" width={80} height={14} priority style={{ display: 'block' }} />
+          <Image src="/dark-logo.png" alt="DARK" width={150} height={27} priority style={{ display: 'block' }} />
           <div className="label-meta mt-2">Admin</div>
         </div>
 
@@ -103,7 +103,7 @@ export default function AdminNav() {
         style={{ background: '#070707', borderBottom: '1px solid #1a1a1a' }}
       >
         <div className="flex items-center gap-3">
-          <Image src="/dark-logo.png" alt="DARK" width={56} height={10} priority />
+          <Image src="/dark-logo.png" alt="DARK" width={150} height={27} priority />
           <span className="label-meta">Admin</span>
         </div>
       </header>

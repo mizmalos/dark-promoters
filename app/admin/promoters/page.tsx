@@ -115,7 +115,7 @@ export default async function PromotersPage({ searchParams }: { searchParams: Pr
           const tickets = ticketsByPromoter.get(p.id) ?? 0;
           const eventCount = eventCountByPromoter.get(p.id) ?? 0;
           return (
-            <Link key={p.id} href={`/admin/promoters/${p.slug}`} className="dark-card p-5 block transition-all hover:border-[#333]">
+            <Link key={p.id} href={`/admin/promoters/${p.slug}`} className="dark-card p-5 block transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div
