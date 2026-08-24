@@ -47,8 +47,8 @@ export default async function AdminDashboard() {
       {/* ── Header ── */}
       <div>
         <p className="label-meta mb-1">{getGreeting()}</p>
-        <h1 className="font-black tracking-[0.12em] text-3xl md:text-4xl" style={{ color: '#F2F2EE' }}>
-          {(process.env.NEXT_PUBLIC_ADMIN_NAME ?? 'DARK').toUpperCase()}.
+        <h1 className="font-black text-3xl md:text-4xl" style={{ color: '#F2F2EE' }}>
+          {(process.env.NEXT_PUBLIC_ADMIN_NAME ?? 'DARK').toUpperCase()}
         </h1>
         <p className="label-meta-2 mt-2">OVERVIEW</p>
       </div>
