@@ -1,5 +1,7 @@
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default async function SyncPage() {
   const [logs, events] = await Promise.all([db.syncLogs.list(), db.events.list()]);
 
