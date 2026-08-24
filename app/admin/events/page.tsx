@@ -58,7 +58,7 @@ export default async function EventsPage() {
                     {dateStr && <span> · {dateStr}</span>}
                   </p>
                 </div>
-                <Link href={`/admin/events/${event.id}`} className="btn-secondary shrink-0">
+                <Link href={`/admin/events/${event.slug}`} className="btn-secondary shrink-0">
                   Manage →
                 </Link>
               </div>

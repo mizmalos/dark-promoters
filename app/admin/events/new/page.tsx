@@ -25,7 +25,7 @@ export default function NewEventPage() {
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setLoading(false); return; }
-    router.push(`/admin/events/${data.id}`);
+    router.push(`/admin/events/${data.slug}`);
   }
 
   return (

@@ -96,6 +96,14 @@ export function suggestLinkSlug(promoterSlug: string, eventName: string): string
 }
 
 /**
+ * Slugify an event name for its admin URL: lowercase, alphanumeric only,
+ * no separators. e.g. 'DARK TEST' -> 'darktest'
+ */
+export function slugifyEventName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+/**
  * Build the full Eventbrite checkout URL with discount code applied.
  * e.g. 'https://www.eventbrite.com.au/e/...' + 'CLAIRE'
  *   → 'https://www.eventbrite.com.au/e/...?discount=CLAIRE'

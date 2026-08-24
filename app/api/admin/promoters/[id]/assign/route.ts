@@ -70,7 +70,10 @@ export async function POST(
   if (created > 0) {
     revalidatePath(`/admin/promoters/${promoter.slug}`);
     revalidatePath('/admin/promoters');
-    for (const event_id of uniqueIds) revalidatePath(`/admin/events/${event_id}`);
+    for (const event_id of uniqueIds) {
+      const event = eventMap.get(event_id);
+      if (event) revalidatePath(`/admin/events/${event.slug}`);
+    }
   }
 
   return NextResponse.json({ created, skipped });

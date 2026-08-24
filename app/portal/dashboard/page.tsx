@@ -153,7 +153,7 @@ export default async function PortalDashboardPage() {
               return (
                 <Link
                   key={a.id}
-                  href={`/portal/dashboard/${a.id}`}
+                  href={`/portal/dashboard/${a.link_slug}`}
                   className="dark-card p-5 flex items-center justify-between gap-4 block transition-all hover:border-[#333]"
                 >
                   <div className="min-w-0">

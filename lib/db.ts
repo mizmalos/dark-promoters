@@ -4,6 +4,7 @@
 // ============================================================
 
 import { supabase } from '@/lib/supabase';
+import { slugifyEventName } from '@/lib/utils/tickets';
 import type {
   Promoter, Event, PromoterEvent, TicketSale, SyncLog,
   PromoterEventWithDetails, EventWithPromoters,
@@ -111,10 +112,17 @@ export const db = {
       return data;
     },
 
-    create: async (input: Omit<Event, 'id' | 'created_at' | 'updated_at'>): Promise<Event> => {
+    create: async (input: Omit<Event, 'id' | 'created_at' | 'updated_at' | 'slug'>): Promise<Event> => {
+      const base = slugifyEventName(input.name);
+      let slug = base;
+      let attempt = 2;
+      while (await db.events.slugExists(slug)) {
+        slug = `${base}${attempt++}`;
+      }
+
       const { data, error } = await supabase
         .from('events')
-        .insert(input)
+        .insert({ ...input, slug })
         .select()
         .single();
       if (error) throw error;
@@ -132,18 +140,25 @@ export const db = {
       return data;
     },
 
-    withPromoters: async (id: string): Promise<EventWithPromoters | null> => {
+    slugExists: async (slug: string, excludeId?: string): Promise<boolean> => {
+      let q = supabase.from('events').select('id').eq('slug', slug);
+      if (excludeId) q = q.neq('id', excludeId);
+      const { data } = await q;
+      return (data?.length ?? 0) > 0;
+    },
+
+    withPromoters: async (slug: string): Promise<EventWithPromoters | null> => {
       const { data: event, error: eventErr } = await supabase
         .from('events')
         .select('*')
-        .eq('id', id)
+        .eq('slug', slug)
         .maybeSingle();
       if (eventErr || !event) return null;
 
       const { data: pes, error: pesErr } = await supabase
         .from('promoter_events')
         .select('*, promoter:promoters(*), event:events(*)')
-        .eq('event_id', id);
+        .eq('event_id', event.id);
       if (pesErr) return null;
 
       return { ...event, promoter_events: (pes ?? []) as PromoterEventWithDetails[] };

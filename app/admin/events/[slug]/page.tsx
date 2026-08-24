@@ -4,9 +4,9 @@ import { db } from '@/lib/db';
 import { countValidTickets, buildEventbriteUrl } from '@/lib/utils/tickets';
 import BulkAssignPanel from './BulkAssignPanel';
 
-export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const event = await db.events.withPromoters(id);
+export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const event = await db.events.withPromoters(slug);
   if (!event) notFound();
 
   const allPromoters = (await db.promoters.list()).filter(p => p.is_active);

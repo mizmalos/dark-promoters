@@ -37,6 +37,7 @@ export interface Promoter {
 export interface Event {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   venue: string | null;
   city: string | null;

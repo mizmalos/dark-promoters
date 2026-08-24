@@ -29,6 +29,7 @@ const EVENTS: Event[] = [
   {
     id: '22222222-0000-0000-0000-000000000001',
     name: '240KMH F2F Melbourne — September 2026',
+    slug: 'kmhmelbourne',
     description: 'The biggest DARK event of the year hits Melbourne.',
     venue: 'Festival Hall', city: 'Melbourne', state: 'VIC',
     event_date: '2026-09-20T20:00:00+10:00',
@@ -40,6 +41,7 @@ const EVENTS: Event[] = [
   {
     id: '22222222-0000-0000-0000-000000000002',
     name: '240KMH F2F Sydney — October 2026',
+    slug: 'kmhsydney',
     description: 'DARK comes to Sydney for one night only.',
     venue: 'Hordern Pavilion', city: 'Sydney', state: 'NSW',
     event_date: '2026-10-18T20:00:00+11:00',
@@ -106,8 +108,9 @@ export const db = {
   events: {
     list: () => [...events].sort((a, b) => (a.event_date ?? '').localeCompare(b.event_date ?? '')),
     get:  (id: string) => events.find(e => e.id === id) ?? null,
-    create: (data: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
-      const e: Event = { ...data, id: uuid(), created_at: now(), updated_at: now() };
+    create: (data: Omit<Event, 'id' | 'created_at' | 'updated_at' | 'slug'>) => {
+      const slug = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const e: Event = { ...data, slug, id: uuid(), created_at: now(), updated_at: now() };
       events.push(e);
       return e;
     },
@@ -117,13 +120,13 @@ export const db = {
       events[idx] = { ...events[idx], ...data, updated_at: now() };
       return events[idx];
     },
-    withPromoters: (id: string): EventWithPromoters | null => {
-      const event = events.find(e => e.id === id);
+    withPromoters: (slug: string): EventWithPromoters | null => {
+      const event = events.find(e => e.slug === slug);
       if (!event) return null;
       return {
         ...event,
         promoter_events: promoterEvents
-          .filter(pe => pe.event_id === id)
+          .filter(pe => pe.event_id === event.id)
           .map(enrich),
       };
     },

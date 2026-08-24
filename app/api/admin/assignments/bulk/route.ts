@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (created > 0) {
-    revalidatePath(`/admin/events/${event_id}`);
+    revalidatePath(`/admin/events/${event.slug}`);
     revalidatePath('/admin/promoters');
   }
 

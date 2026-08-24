@@ -124,7 +124,7 @@ export default async function AdminDashboard() {
                   })
                 : null;
               return (
-                <Link key={event.id} href={`/admin/events/${event.id}`}
+                <Link key={event.id} href={`/admin/events/${event.slug}`}
                   className="flex items-center justify-between px-6 py-4 transition-all hover:bg-white/[0.02]"
                 >
                   <div>

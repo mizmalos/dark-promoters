@@ -16,8 +16,8 @@ import ProgressBar from '../ProgressBar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
-export default async function PortalEventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function PortalEventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
 
   // Validate session server-side. If the check itself throws (stale cookie,
   // transient Supabase error), treat it as unauthenticated rather than
@@ -32,7 +32,7 @@ export default async function PortalEventDetailPage({ params }: { params: Promis
   const promoter = user.email ? await db.promoters.getByEmail(user.email) : null;
   if (!promoter || !promoter.is_active) redirect('/portal/dashboard');
 
-  const assignment = (await db.assignments.forPromoter(promoter.id)).find(a => a.id === id);
+  const assignment = (await db.assignments.forPromoter(promoter.id)).find(a => a.link_slug === slug);
   if (!assignment) notFound();
 
   const sales = await db.sales.forAssignment(assignment.id);

@@ -49,19 +49,19 @@ export async function POST(req: NextRequest) {
     console.error('[assignments] create failed:', msg);
     if (!contentType.includes('application/json')) {
       return NextResponse.redirect(
-        new URL(`/admin/events/${event_id}?error=${encodeURIComponent(msg)}`, req.url), 303
+        new URL(`/admin/events/${event.slug}?error=${encodeURIComponent(msg)}`, req.url), 303
       );
     }
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
-  revalidatePath(`/admin/events/${event_id}`);
+  revalidatePath(`/admin/events/${event.slug}`);
   revalidatePath(`/admin/promoters/${promoter.slug}`);
   revalidatePath('/admin/promoters');
 
   // Redirect back to event page for form submissions
   if (!contentType.includes('application/json')) {
-    return NextResponse.redirect(new URL(`/admin/events/${event_id}`, req.url), 303);
+    return NextResponse.redirect(new URL(`/admin/events/${event.slug}`, req.url), 303);
   }
 
   return NextResponse.json(assignment, { status: 201 });
