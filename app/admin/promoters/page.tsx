@@ -74,16 +74,16 @@ export default async function PromotersPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <p className="label-meta mb-1">{promoters.length} Total</p>
           <h1 className="page-title">Promoters</h1>
         </div>
-        <div className="flex items-center gap-2 mt-1">
-          <Link href="/admin/promoters/import" className="btn-secondary">
+        <div className="flex items-center gap-2 sm:mt-1">
+          <Link href="/admin/promoters/import" className="btn-secondary flex-1 sm:flex-none justify-center">
             Import CSV
           </Link>
-          <Link href="/admin/promoters/new" className="btn-primary">
+          <Link href="/admin/promoters/new" className="btn-primary flex-1 sm:flex-none justify-center">
             + Add Promoter
           </Link>
         </div>
