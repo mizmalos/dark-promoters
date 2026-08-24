@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/tickets';
 import { ShareButton, CopyCodeButton } from '../../ShareButton';
 import SignOutButton from '../SignOutButton';
+import ProgressBar from '../ProgressBar';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
@@ -96,17 +97,10 @@ export default async function PortalEventDetailPage({ params }: { params: Promis
               <p className="label-meta text-right">Earning $5 per sale from here</p>
             </div>
           ) : (
-            <div className="mt-5">
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${progressPct}%`, background: '#B7FF00' }}
-                />
-              </div>
-              <p className="label-meta mt-2">
-                {remaining} more sale{remaining !== 1 ? 's' : ''} to unlock your free ticket
-              </p>
-            </div>
+            <ProgressBar
+              percent={progressPct}
+              label={`${remaining} sale${remaining !== 1 ? 's' : ''} left until free ticket`}
+            />
           )}
         </div>
 
