@@ -2,7 +2,12 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 
 function getGreeting() {
-  const h = new Date().getHours();
+  const hourStr = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Melbourne',
+    hour: 'numeric',
+    hourCycle: 'h23',
+  }).format(new Date());
+  const h = parseInt(hourStr, 10);
   if (h < 12) return 'GOOD MORNING,';
   if (h < 17) return 'GOOD AFTERNOON,';
   return 'GOOD EVENING,';
