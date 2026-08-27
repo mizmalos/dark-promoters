@@ -23,9 +23,9 @@ export function ShareButton({ url, eventName }: { url: string; eventName: string
     <button
       onClick={handleShare}
       className="btn-primary w-full justify-center"
-      style={{ fontSize: '0.7rem', letterSpacing: '0.1em' }}
+      style={{ fontSize: '0.55rem', letterSpacing: '0.1em' }}
     >
-      {state === 'copied' ? '✓ LINK COPIED' : 'SHARE LINK'}
+      {state === 'copied' ? '✓ LINK COPIED' : 'Share your ticket discount link'}
     </button>
   );
 }
