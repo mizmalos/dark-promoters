@@ -53,8 +53,8 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 140%;
-  height: 60vh;
-  background: radial-gradient(ellipse at center, rgba(183,255,0,0.10) 0%, rgba(183,255,0,0.03) 40%, transparent 70%);
+  height: 75vh;
+  background: radial-gradient(ellipse at center, rgba(183,255,0,0.22) 0%, rgba(183,255,0,0.08) 40%, transparent 70%);
   filter: blur(60px);
   pointer-events: none;
   z-index: 2;
