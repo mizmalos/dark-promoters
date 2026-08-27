@@ -30,13 +30,25 @@ export function ShareButton({ url, eventName }: { url: string; eventName: string
   );
 }
 
-export function CopyCodeButton({ code }: { code: string }) {
+export function CopyCodeButton({ code, variant = 'button' }: { code: string; variant?: 'button' | 'text' }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  }
+
+  if (variant === 'text') {
+    return (
+      <button
+        onClick={handleCopy}
+        className="text-xs font-semibold tracking-wide transition-colors"
+        style={{ color: copied ? '#B7FF00' : '#555' }}
+      >
+        {copied ? '✓ Copied' : 'Copy'}
+      </button>
+    );
   }
 
   return (

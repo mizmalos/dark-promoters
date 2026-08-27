@@ -4,8 +4,10 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { db } from '@/lib/db';
 import { countValidTickets, commissionForEvent, hasEarnedFreeTicket } from '@/lib/utils/tickets';
-import { CopyCodeButton } from '../ShareButton';
+import { ShareButton, CopyCodeButton } from '../ShareButton';
 import SignOutButton from './SignOutButton';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://dark-promoters.vercel.app';
 
 export default async function PortalDashboardPage() {
   // Validate session server-side. middleware.ts already gates this route, but
@@ -151,25 +153,31 @@ export default async function PortalDashboardPage() {
                 : null;
 
               return (
-                <Link
-                  key={a.id}
-                  href={`/portal/dashboard/${a.link_slug}`}
-                  className="dark-card p-5 flex items-center justify-between gap-4 block transition-all"
-                >
-                  <div className="min-w-0">
-                    <p className="font-bold truncate" style={{ color: '#F2F2EE' }}>{a.event.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: '#555' }}>
-                      {[a.event.venue, dateStr].filter(Boolean).join(' · ')}
-                    </p>
-                    {hasEarnedFreeTicket(uses) && (
-                      <span className="badge-active mt-2 inline-flex">Free ticket unlocked</span>
-                    )}
+                <div key={a.id} className="dark-card p-5 relative transition-all">
+                  <Link
+                    href={`/portal/dashboard/${a.link_slug}`}
+                    className="row-link-cover"
+                    aria-label={`View ${a.event.name}`}
+                  />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-bold truncate" style={{ color: '#F2F2EE' }}>{a.event.name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: '#555' }}>
+                        {[a.event.venue, dateStr].filter(Boolean).join(' · ')}
+                      </p>
+                      {hasEarnedFreeTicket(uses) && (
+                        <span className="badge-active mt-2 inline-flex">Free ticket unlocked</span>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="font-black text-2xl" style={{ color: '#B7FF00' }}>{uses}</span>
+                      <p className="label-meta">uses</p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-black text-2xl" style={{ color: '#B7FF00' }}>{uses}</span>
-                    <p className="label-meta">uses</p>
+                  <div className="mt-4 relative" style={{ zIndex: 2 }}>
+                    <ShareButton url={`${BASE_URL}/m/${a.link_slug}`} eventName={a.event.name} />
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -182,7 +190,7 @@ export default async function PortalDashboardPage() {
         )}
 
         {/* ── Promo code ── */}
-        <div className="dark-card p-6" style={{ border: '1px solid rgba(183,255,0,0.12)' }}>
+        <div className="dark-card p-6">
           <p className="label-meta mb-5">Your Promo Code</p>
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -191,7 +199,7 @@ export default async function PortalDashboardPage() {
               </p>
               <p className="label-meta mt-1">$5 OFF · auto-applied at checkout</p>
             </div>
-            <CopyCodeButton code={promoter.promo_code} />
+            <CopyCodeButton code={promoter.promo_code} variant="text" />
           </div>
         </div>
 
