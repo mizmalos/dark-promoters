@@ -117,7 +117,7 @@ export default async function PortalEventDetailPage({ params }: { params: Promis
         </div>
 
         {/* ── Promo code ── */}
-        <div className="dark-card p-6" style={{ border: '1px solid rgba(183,255,0,0.12)' }}>
+        <div className="dark-card p-6">
           <p className="label-meta mb-5">Your Promo Code</p>
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -126,7 +126,7 @@ export default async function PortalEventDetailPage({ params }: { params: Promis
               </p>
               <p className="label-meta mt-1">$5 OFF · auto-applied at checkout</p>
             </div>
-            <CopyCodeButton code={promoter.promo_code} />
+            <CopyCodeButton code={promoter.promo_code} variant="text" />
           </div>
         </div>
       </div>
